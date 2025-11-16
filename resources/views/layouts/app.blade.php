@@ -47,16 +47,17 @@
         <i class="align-middle" data-feather="folder"></i> <span class="align-middle">Projects</span>
     </a>
 </li>
+<li class="sidebar-item {{ request()->routeIs('phases.*') ? 'active' : '' }}">
+						<a class="sidebar-link" href="{{ route('phases.indexAll') }}">
+			  <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Phases</span>
+			</a>
+					</li>
 					<li class="sidebar-item {{ request()->routeIs('sheets.*') ? 'active' : '' }}">
 						<a class="sidebar-link" href="{{ route('sheets.indexAll') }}">
 			  <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Sheets</span>
 			</a>
 					</li>
-					<li class="sidebar-item {{ request()->routeIs('phases.*') ? 'active' : '' }}">
-						<a class="sidebar-link" href="{{ route('phases.indexAll') }}">
-			  <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Phases</span>
-			</a>
-					</li>
+					
 					<li class="sidebar-item {{ request()->routeIs('qa_items.*') ? 'active' : '' }}">
 						<a class="sidebar-link" href="{{ route('qa_items.indexAll') }}">
 			  <i class="align-middle" data-feather="check-circle"></i> <span class="align-middle">QA Items</span>
