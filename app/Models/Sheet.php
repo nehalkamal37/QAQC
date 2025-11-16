@@ -27,4 +27,22 @@ class Sheet extends Model
     {
         return $this->hasMany(QAItem::class);
     }
+
+
+    // Calculate completion percentage based on associated QA items
+    public function completionPercentage()
+{
+    $total = $this->qaItems()->count();
+    if ($total == 0) return 0;
+
+    $completed = $this->qaItems()->whereIn('status', ['verified', 'closed'])->count();
+
+    return round(($completed / $total) * 100);
+}
+
+public function isCompleted()
+{
+    return $this->completionPercentage() == 100;
+}
+
 }

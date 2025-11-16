@@ -50,4 +50,36 @@ public function reviews()
 }
 
 
+// Calculate completion percentage based on status
+public function completionPercentage()
+{
+    $status = $this->status;
+    switch ($status) {
+        case 'closed':
+        case 'verified':   
+            return 100; 
+        case 'resolved':
+            return 75;
+        case 'in_progress':
+            return 50;
+        case 'needs_info':
+            return 25;
+        case 'open':
+        default:
+            return 0;
+    }
+}
+
+public function isCompleted()
+{
+    return in_array($this->status, ['verified', 'closed']);
+}
+
+// Attachments relationship
+
+public function attachments()
+{
+    return $this->hasMany(Attachment::class, 'qa_item_id');
+}
+
 }

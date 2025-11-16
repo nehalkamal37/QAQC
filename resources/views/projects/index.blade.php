@@ -18,6 +18,7 @@
                 <th>Client</th>
                 <th>Status</th>
                 <th>Due Date</th>
+                <th>Progress</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -29,19 +30,33 @@
                 <td>{{ ucfirst($project->status) }}</td>
                 <td>{{ $project->due_date }}</td>
                 <td>
+<div class="progress mb-2" style="height: 10px;">
+    <div class="progress-bar bg-success"
+         style="width: {{ $project->completionPercentage() }}%">
+    </div>
+</div>
+{{ $project->completionPercentage() }}% completed
 
-                    <a href="{{ route('projects.show', $project->id) }}" class="btn btn-sm btn-info">View</a>
-                                                   @if(auth()->user()->hasRole(['Admin', 'PM']))
-                    <a href="{{ route('phases.index', $project->id) }}" class="btn btn-sm btn-success text-white">Phases</a>
+</td>
+           <td>
+    {{-- Everyone Can View --}}
+    <a href="{{ route('projects.show', $project->id) }}" class="btn btn-sm btn-info">View</a>
 
-                    <a href="{{ route('projects.edit', $project->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <form action="{{ route('projects.destroy', $project->id) }}" method="POST" style="display:inline">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger"
-                            onclick="return confirm('Delete this project?')">Delete</button>
-                    </form>
-                    @endif
-                </td>
+    {{-- Everyone Can Access Phases --}}
+    <a href="{{ route('phases.index', $project->id) }}" class="btn btn-sm btn-success text-white">Phases</a>
+
+    {{-- Only Admin + PM Can Edit/Delete --}}
+    @if(auth()->user()->hasRole(['Admin', 'PM']))
+        <a href="{{ route('projects.edit', $project->id) }}" class="btn btn-sm btn-warning">Edit</a>
+
+        <form action="{{ route('projects.destroy', $project->id) }}" method="POST" style="display:inline">
+            @csrf @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-danger"
+                onclick="return confirm('Delete this project?')">Delete</button>
+        </form>
+    @endif
+</td>
+
             </tr>
             @endforeach
         </tbody>

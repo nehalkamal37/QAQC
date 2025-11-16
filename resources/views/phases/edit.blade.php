@@ -27,7 +27,7 @@
                 <div class="mb-3">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
-                        @foreach (['in_review', 'ready_for_signoff', 'closed'] as $status)
+                        @foreach (['in_review', 'ready_for_signoff', 'closed','changes required','planning'] as $status)
                             <option value="{{ $status }}" {{ $phase->status == $status ? 'selected' : '' }}>
                                 {{ ucfirst(str_replace('_', ' ', $status)) }}
                             </option>

@@ -7,6 +7,8 @@ use App\Http\Controllers\SheetController;
 use App\Http\Controllers\QaItemController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoController;
+use App\Http\Controllers\PhaseStatusController;
+use App\Http\Controllers\AttachmentController;
 
 // ======================
 // Auth routes
@@ -46,10 +48,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/sheets/all', [SheetController::class, 'indexAll'])->name('sheets.indexAll');
     Route::get('/qa-items/all', [QaItemController::class, 'indexAll'])->name('qa_items.indexAll');
 
+    // sunday workflow routes
+    Route::patch('/phases/{phase}/status', [PhaseStatusController::class, 'update'])
+     ->name('phases.status.update');
+
+     // attachments routes
+     Route::post('/qa-items/{item}/attachments', [AttachmentController::class, 'store'])
+    ->name('attachments.store');
+
+Route::delete('/attachments/{id}', [AttachmentController::class, 'destroy'])
+    ->name('attachments.destroy');
+
+
     // ======================
     // صلاحيات Admin / PM / Reviewer
     // ======================
-    Route::middleware(['role:Admin,PM,Reviewer'])->group(function () {
+    Route::middleware([])->group(function () {
 
         // Projects CRUD
         Route::resource('projects', ProjectController::class);
