@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Phase;
+use App\Models\QAItem;
+use App\Models\Attachment;
 
 class Sheet extends Model
 {
@@ -44,5 +47,12 @@ public function isCompleted()
 {
     return $this->completionPercentage() == 100;
 }
+
+
+public function attachments()
+{
+    return $this->morphMany(Attachment::class, 'attachable');
+}
+
 
 }

@@ -76,10 +76,16 @@ public function isCompleted()
 }
 
 // Attachments relationship
-
+/*
 public function attachments()
 {
     return $this->hasMany(Attachment::class, 'qa_item_id');
+}
+*/
+
+public function attachments()
+{
+    return $this->morphMany(Attachment::class, 'attachable');
 }
 
 }

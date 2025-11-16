@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Attachment;
 use Illuminate\Support\Facades\Storage;
-
-
+use App\Models\QAItem;
+use App\Models\Sheet;
 class AttachmentController extends Controller
 {
   
@@ -15,6 +15,7 @@ class AttachmentController extends Controller
     $request->validate([
         'files.*' => 'required|mimes:jpg,jpeg,png,pdf|max:20480'
     ]);
+    /*
 
     foreach ($request->file('files') as $file) {
 
@@ -28,7 +29,22 @@ $path = $file->store('attachments', 'public');
             'path'       => $path,
             'mime'       => $file->getMimeType(),
         ]);
-    }
+*/
+        $item = QAItem::findOrFail($itemId);
+
+foreach ($request->file('files') as $file) {
+
+    $path = $file->store('attachments', 'public');
+
+    $item->attachments()->create([
+        'user_id'  => auth()->id(),
+        'filename' => $file->getClientOriginalName(),
+        'path'     => $path,
+        'mime'     => $file->getMimeType(),
+    ]);
+}
+
+    
 
     return back()->with('success', 'Files uploaded successfully');
 }
@@ -57,5 +73,31 @@ $path = $file->store('attachments', 'public');
 
     return back()->with('success', 'Note added');
 }
+
+
+public function storeForSheet(Request $request, $sheetId)
+{
+    $sheet = Sheet::findOrFail($sheetId);
+
+    $request->validate([
+        'files.*' => 'required|mimes:jpg,jpeg,png,pdf|max:20480'
+    ]);
+
+    foreach ($request->file('files') as $file) {
+
+        $path = $file->store('attachments', 'public');
+
+        $sheet->attachments()->create([
+            'user_id'  => auth()->id(),
+            'filename' => $file->getClientOriginalName(),
+            'path'     => $path,
+            'mime'     => $file->getMimeType(),
+        ]);
+    }
+
+    return back()->with('success', 'Files uploaded to sheet!');
+}
+
+
 
 }

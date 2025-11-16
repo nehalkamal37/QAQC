@@ -59,6 +59,9 @@ Route::middleware('auth')->group(function () {
 Route::delete('/attachments/{id}', [AttachmentController::class, 'destroy'])
     ->name('attachments.destroy');
 
+    Route::post('/sheets/{sheet}/attachments', [AttachmentController::class, 'storeForSheet'])
+     ->name('attachments.store.sheet');
+
 
     // ======================
     // صلاحيات Admin / PM / Reviewer

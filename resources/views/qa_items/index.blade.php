@@ -424,13 +424,15 @@
 
 
                                 {{-- UPLOAD FORM --}}
+        @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer','Engineer','Night Vision','Reviewer']) ||
+                                                    $item->assigned_to == auth()->user()->name)
                               <form action="{{ route('attachments.store', $item->id) }}"
       method="POST" enctype="multipart/form-data" class="d-flex gap-2">
     @csrf
     <input type="file" name="files[]" class="form-control" multiple required>
     <button class="btn btn-primary">Upload</button>
 </form>
-
+@endif
                                 
 
                             </div>
