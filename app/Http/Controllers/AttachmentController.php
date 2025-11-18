@@ -10,44 +10,43 @@ use App\Models\Sheet;
 class AttachmentController extends Controller
 {
   
-    public function store(Request $request, $itemId)
+public function store(Request $request, $itemId)
 {
-    $request->validate([
-        'files.*' => 'required|mimes:jpg,jpeg,png,pdf|max:20480'
-    ]);
-    /*
+    $item = QAItem::findOrFail($itemId);
 
     foreach ($request->file('files') as $file) {
 
-       // $path = $file->store('qa_attachments', 'public');
-$path = $file->store('attachments', 'public');
+        $path = $file->store('attachments', 'public');
 
-        Attachment::create([
-            'qa_item_id' => $itemId,
-            'user_id'    => auth()->id(),
-            'filename'   => $file->getClientOriginalName(),
-            'path'       => $path,
-            'mime'       => $file->getMimeType(),
+        $att = $item->attachments()->create([
+            'filename' => $file->getClientOriginalName(),
+            'path'     => $path,
+            'mime'     => $file->getClientMimeType(),
+            'user_id'  => auth()->id()
         ]);
-*/
-        $item = QAItem::findOrFail($itemId);
 
-foreach ($request->file('files') as $file) {
-
-    $path = $file->store('attachments', 'public');
-
-    $item->attachments()->create([
-        'user_id'  => auth()->id(),
+        // 🔥 LOG EVENT
+    
+logActivity([
+    'project_id' => $item->sheet->phase->project_id,
+    'phase_id'   => $item->sheet->phase_id,
+    'sheet_id'   => $item->sheet_id,
+    'qa_item_id' => $item->id,
+    'action_type' => 'attachment_uploaded',
+    'note'        => $file->getClientOriginalName(),
+    'new'         => [
         'filename' => $file->getClientOriginalName(),
         'path'     => $path,
-        'mime'     => $file->getMimeType(),
-    ]);
+        'mime'     => $file->getMimeType()
+    ]
+]);
+}
+    return back()->with('success', 'Files uploaded.');
 }
 
     
 
-    return back()->with('success', 'Files uploaded successfully');
-}
+   
 
 
     public function destroy($id)

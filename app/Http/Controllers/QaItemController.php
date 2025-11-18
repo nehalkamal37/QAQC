@@ -8,6 +8,8 @@ use App\Models\QaItemReview;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Facades\DB;
+
 
 class QAItemController extends Controller
 {
@@ -162,25 +164,37 @@ class QAItemController extends Controller
     // ================================
     // ADD REVIEW
     // ================================
-   public function addReview(Request $request, $sheetId, $qaItemId)
+  public function addReview(Request $request, $sheetId, $itemId)
 {
-    $request->validate([
-        'comment' => 'required|string|max:1000',
-        'status'  => ['required', Rule::in(QaItemReview::REVIEW_STATUSES)],
-    ]);
+    $item = QAItem::findOrFail($itemId);
 
-    $item = QAItem::findOrFail($qaItemId);
+  
+  $review = $item->reviews()->create([
+    'user_id' => auth()->id(),
+    'role'    => auth()->user()->role->name ?? 'Unknown',
+    'comment' => $request->comment,
+    'status'  => $request->status
+]);
 
-    QaItemReview::create([
+
+    // 🔥 LOG EVENT
+    logActivity([
+        'project_id' => $item->sheet->phase->project_id,
+        'phase_id'   => $item->sheet->phase_id,
+        'sheet_id'   => $item->sheet_id,
         'qa_item_id' => $item->id,
-        'user_id'    => auth()->id(),
-        'role'       => auth()->user()->role->name ?? 'Reviewer',
-        'status'     => $request->status,
-        'comment'    => $request->comment,
+
+        'action_type' => 'review_added',
+        'new' => [
+            'comment' => $review->comment,
+            'status'  => $review->status
+        ],
+        'note' => $review->comment
     ]);
 
-    return back()->with('success', 'Review added successfully!');
+    return back()->with('success', 'Review added.');
 }
+
 
     // ================================
     // UPDATE REVIEW
@@ -229,15 +243,56 @@ class QAItemController extends Controller
         return back()->with('success', 'All items verified successfully!');
     }
 
-    public function updateStatus(Request $request, $id)
-    {
-        $request->validate([
-            'status' => ['required', Rule::in(QAItem::STATUSES)],
-        ]);
+  public function updateStatus(Request $request, $id)
+{
+    $item = QAItem::findOrFail($id);
 
-        $item = QAItem::findOrFail($id);
-        $item->update(['status' => $request->status]);
+    $old = $item->status;
 
-        return back()->with('success', 'Status updated successfully.');
-    }
+    $item->update([
+        'status' => $request->status
+    ]);
+
+    // 🔥 LOG EVENT
+    logActivity([
+        'project_id' => $item->sheet->phase->project_id,
+        'phase_id'   => $item->sheet->phase_id,
+        'sheet_id'   => $item->sheet_id,
+        'qa_item_id' => $item->id,
+        'action_type' => 'status_change',
+        'old' => ['status' => $old],
+        'new' => ['status' => $request->status],
+        'note' => "Status updated to {$request->status}"
+    ]);
+
+    return back()->with('success', 'Status updated.');
+}
+
+
+// review list with severity filter
+public function reviewsIndex(Request $request)
+{
+    $severity = $request->severity;
+    $reviewer = $request->reviewer;
+    $search   = $request->search;
+
+    $reviews = \App\Models\QAItemReview::with(['user', 'item.sheet.phase.project'])
+        ->when($severity, fn($q) =>
+            $q->whereHas('item', fn($qi) => $qi->where('severity', $severity))
+        )
+        ->when($reviewer, fn($q) =>
+            $q->where('user_id', $reviewer)
+        )
+        ->when($search, fn($q) =>
+            $q->where('comment', 'like', "%{$search}%")
+        )
+        ->orderBy('created_at', 'desc')
+        ->paginate(25);
+
+    $reviewers = \App\Models\User::orderBy('name')->get();
+
+    return view('qa_items.reviews_index', compact('reviews', 'severity', 'reviewers'));
+}
+
+
 }

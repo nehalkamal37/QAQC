@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Project;;
+use App\Models\Sheet;
+
 
 class Phase extends Model
 {
@@ -14,10 +17,6 @@ class Phase extends Model
     return $this->belongsTo(Project::class);
 }
 
-public function sheets()
-{
-    return $this->hasMany(Sheet::class);
-}
 
 
 
@@ -71,6 +70,17 @@ public function isCompleted()
     return $this->completionPercentage() == 100;
 }
 
+public function sheets()
+{
+    return $this->hasManyThrough(
+        Sheet::class,
+        Phase::class,
+        'project_id', // phases.project_id
+        'phase_id',   // sheets.phase_id
+        'id',         // projects.id
+        'id'          // phases.id
+    );
+}
 
 
 }

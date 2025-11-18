@@ -84,6 +84,7 @@
             <table class="table table-striped align-middle">
                 <thead class="table-dark">
                 <tr>
+
                     <th>ID</th>
                     <th>Description</th>
                     <th>Status</th>
@@ -119,8 +120,10 @@
                         };
                     @endphp
 
-                    <tr>
+<tr id="item-{{ $item->id }}">
+
                         <td>{{ $item->id }}</td>
+                        
                         <td>{{ $item->item_description }}</td>
 
                         <td><span class="badge bg-{{ $badge }}">{{ ucfirst(str_replace('_',' ', $item->status)) }}</span></td>
@@ -452,4 +455,31 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Check if URL contains #item-XYZ
+    const hash = window.location.hash;
+
+    if (hash && hash.startsWith("#item-")) {
+        const row = document.querySelector(hash);
+
+        if (row) {
+            // Scroll to it smoothly
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+
+            // Highlight Animation
+            row.style.transition = "background-color 1s ease";
+            row.style.backgroundColor = "#fff3cd"; // light yellow
+
+            setTimeout(() => {
+                row.style.backgroundColor = "";
+            }, 2000);
+        }
+    }
+
+});
+</script>
+
 @endsection

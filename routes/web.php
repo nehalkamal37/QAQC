@@ -62,6 +62,19 @@ Route::delete('/attachments/{id}', [AttachmentController::class, 'destroy'])
     Route::post('/sheets/{sheet}/attachments', [AttachmentController::class, 'storeForSheet'])
      ->name('attachments.store.sheet');
 
+// timeline page route
+Route::get('/timeline', [\App\Http\Controllers\TimelineController::class, 'index'])
+    ->name('timeline.index')
+    ->middleware('auth');
+
+Route::get('/qa-items/all', [QaItemController::class, 'indexAll'])->name('qa_items.indexAll');
+Route::get('/reviews', [QaItemController::class, 'reviewsIndex'])->name('qa_reviews.index');
+// routes/web.php
+   //Route::get('/reviews', [QaItemController::class, 'reviewsIndex'])->name('reviews.index');
+
+Route::delete('/timeline/{id}', [\App\Http\Controllers\TimelineController::class, 'destroy'])
+    ->name('timeline.destroy');
+
 
     // ======================
     // صلاحيات Admin / PM / Reviewer

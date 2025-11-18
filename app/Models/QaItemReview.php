@@ -3,6 +3,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\QAItem;
+use App\Models\User;
 
 class QaItemReview extends Model
 {
@@ -44,4 +46,11 @@ class QaItemReview extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+
+    public function item()
+    {
+        return $this->belongsTo(QAItem::class, 'qa_item_id');
+    }
+
 }
