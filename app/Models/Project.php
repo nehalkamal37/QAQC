@@ -7,6 +7,10 @@ use App\Models\Phase;
 use App\Models\Sheet;
 use App\Models\QaItem;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use App\Models\Assignment;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\ProjectQAItemStatus;
 
 class Project extends Model
 {
@@ -17,7 +21,25 @@ class Project extends Model
         'start_date',
         'due_date',
         'status',
+        'pm_id',
     ];
+
+    public function qaStatuses()
+    {
+        return $this->hasMany(ProjectQAItemStatus::class);
+    }
+
+public function pm(){
+    return $this->belongsTo(User::class,'pm_id');
+}
+
+
+public function qaItems()
+{
+    return $this->belongsToMany(QaItem::class, 'project_qa_item_statuses', 'project_id', 'qa_item_id')
+                ->withPivot(['status', 'applicable', 'incorporated', 'confirmed'])
+                ->withTimestamps();
+}
 
     public function phases()
 {
@@ -62,7 +84,7 @@ public function sheets()
 
 
 
-
+/*
     public function qaItems()
     {
         return $this->hasManyDeep(
@@ -81,6 +103,58 @@ public function sheets()
         );
     }
 
+*/
 
 
+
+    // Add this to your existing Project model
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
+    public function activeAssignments(): HasMany
+    {
+        return $this->assignments()->active();
+    }
+
+    // Get users by role
+    public function getPMs()
+    {
+        return User::whereHas('assignments', function ($query) {
+            $query->where('project_id', $this->id)
+                  ->where('role', 'pm')
+                  ->active();
+        })->get();
+    }
+
+    public function getSeniorReviewers()
+    {
+        return User::whereHas('assignments', function ($query) {
+            $query->where('project_id', $this->id)
+                  ->where('role', 'senior_reviewer')
+                  ->active();
+        })->get();
+    }
+
+    public function getEngineers()
+    {
+        return User::whereHas('assignments', function ($query) {
+            $query->where('project_id', $this->id)
+                  ->where('role', 'engineer')
+                  ->active();
+        })->get();
+    }
+
+    public function assignUser($userId, $role, $phaseId = null, $notes = null)
+    {
+        return Assignment::create([
+            'user_id' => $userId,
+            'project_id' => $this->id,
+            'phase_id' => $phaseId,
+            'role' => $role,
+            'assigned_at' => now(),
+            'notes' => $notes
+        ]);
+    }
 }

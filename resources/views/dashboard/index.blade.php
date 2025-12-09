@@ -14,64 +14,305 @@
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <a href="{{ route('projects.index') }}" class="text-decoration-none card-link">
-                <div class="stat-card stat-card-primary">
-                    <div class="stat-icon">
-                        <i class="fas fa-folder-open"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-title">Projects</div>
-                        <div class="stat-value">{{ $data['projects_count'] }}</div>
-                    </div>
-                </div>
-            </a>
+   
+<div class="section-card mb-4">
+
+    <!-- HEADER + FILTER -->
+    <div class="section-header d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0">📌 Project QA Progress</h5>
+            <span class="text-muted small">Visual progress across projects, phases & sheets</span>
         </div>
 
-        <div class="col-md-3">
-            <a href="{{ route('phases.indexAll') }}" class="text-decoration-none card-link">
-                <div class="stat-card stat-card-success">
-                    <div class="stat-icon">
-                        <i class="fas fa-layer-group"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-title">Phases</div>
-                        <div class="stat-value">{{ $data['phases_count'] }}</div>
-                    </div>
-                </div>
-            </a>
+        <select id="projectProgressFilter" class="form-select form-select-sm" style="width:200px;">
+            <option value="">All Projects</option>
+            @foreach($projects as $proj)
+                <option value="{{ $proj->id }}">{{ $proj->name }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <!-- PROJECT RESULTS CONTAINER -->
+    <div id="projectProgressContainer" class="mt-3">
+
+        <div class="text-center text-muted py-4">
+            Select a project from the filter above to view progress.
         </div>
 
-        <div class="col-md-3">
-            <a href="{{ route('sheets.indexAll') }}" class="text-decoration-none card-link">
-                <div class="stat-card stat-card-warning">
-                    <div class="stat-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-title">Sheets</div>
-                        <div class="stat-value">{{ $data['sheets_count'] }}</div>
-                    </div>
-                </div>
-            </a>
+    </div>
+</div>
+
+
+{{--
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0">📉 Phase Burn-Down Chart</h5>
+            <small class="text-muted">Remaining QA items per day — toward Signoff</small>
         </div>
 
-        <div class="col-md-3">
-            <a href="{{ route('qa_items.indexAll') }}" class="text-decoration-none card-link">
-                <div class="stat-card stat-card-danger">
-                    <div class="stat-icon">
-                        <i class="fas fa-clipboard-check"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-title">QA Items</div>
-                        <div class="stat-value">{{ $data['qa_items_count'] }}</div>
-                    </div>
-                </div>
-            </a>
+        <div class="d-flex">
+            <select id="burndownPhaseFilter" class="form-select form-select-sm" style="width: 200px;">
+                <option value="">Select Phase</option>
+                @foreach($projects as $proj)
+                    @foreach($proj->phases as $ph)
+                        <option value="{{ $ph->id }}">
+                            {{ $proj->name }} — {{ $ph->type }}
+                        </option>
+                    @endforeach
+                @endforeach
+            </select>
         </div>
     </div>
+
+    <div class="card-body">
+        <canvas id="phaseBurndownChart" height="120"></canvas>
+    </div>
+</div>
+
+--}}
+
+
+{{-- Sheet Heatmap + SLA Analytics --}}
+
+<!-- ===================== -->
+<!-- 1) SHEET HEATMAP (FULL WIDTH) -->
+<!-- ===================== -->
+<div class="col-12">
+    <div class="card shadow-sm h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0">🗺️ Sheet × Status Heatmap</h5>
+                <small class="text-muted">Per-sheet QA distribution — based on A/I/C project status</small>
+            </div>
+{{--
+            <select id="heatmapProjectFilter" class="form-select form-select-sm" style="width:200px;">
+                <option value="">All Projects</option>
+                @foreach($projects as $proj)
+                    <option value="{{ $proj->id }}">{{ $proj->name }}</option>
+                @endforeach
+            </select>  --}}
+
+            <div class="d-flex gap-2">
+
+    <!-- PROJECT FILTER -->
+    <select id="heatmapProjectFilter" class="form-select form-select-sm" style="width:200px;">
+        <option value="">All Projects</option>
+        @foreach($projects as $proj)
+            <option value="{{ $proj->id }}">{{ $proj->name }}</option>
+        @endforeach
+    </select>
+
+    <!-- NEW: PHASE FILTER -->
+    <select id="heatmapPhaseFilter" class="form-select form-select-sm" style="width:200px;">
+        <option value="">All Phases</option>
+        {{-- سيتم ملؤها ديناميكياً من الجافاسكربت --}}
+    </select>
+
+</div>
+
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
+                <div id="heatmapHeaderInfo" class="fw-bold mb-2" style="font-size:16px;"></div>
+
+                <table class="table table-sm table-hover heatmap-table align-middle">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>Sheet</th>
+                          <th class="text-center">Total</th>
+
+                            <th class="text-center">Open</th>
+                            <th class="text-center">In Progress</th>
+                            <th class="text-center">Needs Info</th>
+                            <th class="text-center">Resolved</th>
+                            <th class="text-center">Verified</th>
+                            <th class="text-center">Closed</th>
+                            <th class="text-center text-primary">A</th>
+                            <th class="text-center text-info">I</th>
+                            <th class="text-center text-success">C</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sheetHeatmapBody">
+                        <tr>
+                            <td colspan="12" class="text-center text-muted py-4">
+                                Loading heatmap...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+<!--
+            <div class="mt-3">
+                <strong class="small">Legend:</strong>
+                <div class="d-flex align-items-center gap-3 small mt-1">
+                    <span><span class="legend-box" style="background:rgba(220,53,69,0.2)"></span> Low</span>
+                    <span><span class="legend-box" style="background:rgba(220,53,69,0.5)"></span> Medium</span>
+                    <span><span class="legend-box" style="background:rgba(220,53,69,0.8)"></span> High</span>
+                </div>
+            </div>
+-->
+        </div>
+    </div>
+
+
+    
+    <!-- ========================= -->
+<!-- ========================================== -->
+<!--   BEAUTIFUL MODERN QA ITEMS MODAL          -->
+<!-- ========================================== -->
+<div class="modal fade" id="qaItemsModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content shadow-lg border-0" style="border-radius: 14px;">
+
+          <!-- HEADER -->
+          <div class="modal-header text-white" 
+               style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); border-radius: 14px 14px 0 0;">
+              <h5 class="modal-title fw-bold d-flex align-items-center">
+                  <i class="fas fa-tasks me-2"></i>
+                  QA Items — <span id="modalStatus" class="ms-1"></span>
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+
+          <!-- BODY -->
+          <div class="modal-body" style="background:#f8fafc;">
+
+              <!-- LOADING -->
+              <div id="modalLoading" class="text-center py-5 d-none">
+                  <div class="spinner-border text-primary" style="width:3rem; height:3rem;"></div>
+                  <p class="mt-3 text-muted fw-semibold">Loading items…</p>
+              </div>
+
+              <!-- ITEMS TABLE -->
+              <div id="modalItemsContainer" class="table-responsive d-none">
+                  <table class="table table-hover align-middle shadow-sm bg-white" 
+                         style="border-radius:10px; overflow:hidden;">
+                      <thead class="table-light">
+                          <tr>
+                              <th style="width:70px;">ID</th>
+                              <th style="width:35%;">Description</th>
+                              <th>Sheet</th>
+                              <th>Status</th>
+                              <th>Assigned To</th>
+                              <th>Due Date</th>
+                              <th>Created</th>
+                              <th class="text-center">Actions</th>
+                          </tr>
+                      </thead>
+                      <tbody id="modalItemsBody"></tbody>
+                  </table>
+              </div>
+
+          </div>
+      </div>
+  </div>
+</div>
+
+<style>
+    /* Status badges */
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    .status-open       { background:#fee2e2; color:#b91c1c; }
+    .status-in_progress{ background:#fef3c7; color:#b45309; }
+    .status-needs_info { background:#e0f2fe; color:#0369a1; }
+    .status-resolved   { background:#dcfce7; color:#166534; }
+    .status-verified   { background:#cffafe; color:#0f766e; }
+    .status-closed     { background:#e5e7eb; color:#374151; }
+
+    /* A / I / C colors */
+    .status-A { background:#dbeafe; color:#1d4ed8; }
+    .status-I { background:#e0f2fe; color:#0369a1; }
+    .status-C { background:#dcfce7; color:#15803d; }
+
+
+    
+</style>
+    
+</div>
+
+
+    <!-- ===================== -->
+    <!-- 2) SLA ANALYTICS (RIGHT) -->
+    <!-- ===================== -->
+     {{--
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5 class="fw-bold mb-0">⏱️ SLA & Overdue Analytics</h5>
+                <small class="text-muted">Age of active QA items vs SLA target</small>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="small text-muted">Active</div>
+                        <div class="h4 mb-0" id="slaActiveCount">–</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-muted">Overdue</div>
+                        <div class="h4 mb-0 text-danger" id="slaOverdueCount">–</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-muted">Avg Age (days)</div>
+                        <div class="h4 mb-0" id="slaAvgAge">–</div>
+                    </div>
+                </div>
+
+                <canvas id="slaAgeBucketsChart" height="110"></canvas>
+
+                <hr>
+                <small class="text-muted d-block mt-2">
+    <strong>📌 What this chart means:</strong><br>
+    • <strong>X-Axis</strong> (horizontal): age groups = how many days each QA item has been open  
+      (calculated as: <code>today − created_at</code>).<br>
+    • <strong>Y-Axis</strong> (vertical): number of active QA items inside each age group.<br>
+   <!-- • This chart shows backlog age only — not overdue status and not related to due dates. -->
+</small>
+
+<!--
+                <h6 class="fw-bold mb-2">Overdue by Severity</h6>
+                <canvas id="slaSeverityChart" height="110"></canvas>
+
+                <small class="text-muted d-block mt-2">
+                    SLA target: average age < 7 days. Overdue & age buckets help enforce discipline.
+                </small>
+-->
+            </div>
+        </div>
+        
+    </div>
+
+</div>
+--}}
+<div class="card shadow-sm mb-4 mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0">🚦 Phase Gate Analytics</h5>
+            <small class="text-muted">
+                Progress, blocking items & signoff readiness for each phase
+            </small>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="phaseGatesContainer">
+            <div class="text-center text-muted py-3">
+                Loading phase analytics...
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 
     <!-- Status & Severity Section -->
     <div class="row g-4 mb-4">
@@ -260,445 +501,424 @@
         </div>
     </div>
 
+
+
+
+
 </div>
 
-<!-- Custom CSS -->
-<style>
-    :root {
-        --primary: #4361ee;
-        --success: #06d6a0;
-        --warning: #ffd166;
-        --danger: #ef476f;
-        --info: #118ab2;
-        --secondary: #8d99ae;
-        --light: #f8f9fa;
-        --dark: #212529;
-        --open: #ef476f;
-        --pending: #ffd166;
-        --resolved: #06d6a0;
-        --closed: #8d99ae;
-        --critical: #d90429;
-        --high: #f77f00;
-        --medium: #4cc9f0;
-        --low: #adb5bd;
-    }
-
-    .dashboard-container {
-        background-color: #f8fafc;
-        min-height: 100vh;
-    }
-
-    .date-display {
-        background: white;
-        padding: 8px 16px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-    }
-
-    /* Stat Cards */
-    .stat-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 24px;
-        display: flex;
-        align-items: center;
-        border: 1px solid #f1f1f1;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    }
-
-    .stat-card-primary {
-        border-left: 4px solid var(--primary);
-    }
-
-    .stat-card-success {
-        border-left: 4px solid var(--success);
-    }
-
-    .stat-card-warning {
-        border-left: 4px solid var(--warning);
-    }
-
-    .stat-card-danger {
-        border-left: 4px solid var(--danger);
-    }
-
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 16px;
-        font-size: 24px;
-    }
-
-    .stat-card-primary .stat-icon {
-        background-color: rgba(67, 97, 238, 0.1);
-        color: var(--primary);
-    }
-
-    .stat-card-success .stat-icon {
-        background-color: rgba(6, 214, 160, 0.1);
-        color: var(--success);
-    }
-
-    .stat-card-warning .stat-icon {
-        background-color: rgba(255, 209, 102, 0.1);
-        color: var(--warning);
-    }
-
-    .stat-card-danger .stat-icon {
-        background-color: rgba(239, 71, 111, 0.1);
-        color: var(--danger);
-    }
-
-    .stat-title {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #6c757d;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        margin-bottom: 4px;
-    }
-
-    .stat-value {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: var(--dark);
-    }
-
-    /* Section Cards */
-    .section-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid #f1f1f1;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        height: 100%;
-    }
-
-    .section-header {
-        margin-bottom: 16px;
-    }
-
-    /* Status Cards */
-    .status-card {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 16px;
-        display: flex;
-        align-items: center;
-        border: 1px solid #f1f1f1;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-        transition: all 0.2s ease;
-        height: 100%;
-    }
-
-    .status-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    .status-indicator {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        margin-right: 12px;
-    }
-
-    .status-open .status-indicator {
-        background-color: var(--open);
-    }
-
-    .status-pending .status-indicator {
-        background-color: var(--pending);
-    }
-
-    .status-resolved .status-indicator {
-        background-color: var(--resolved);
-    }
-
-    .status-closed .status-indicator {
-        background-color: var(--closed);
-    }
-
-    .status-title {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #6c757d;
-        margin-bottom: 4px;
-    }
-
-    .status-value {
-        font-size: 1.8rem;
-        font-weight: 700;
-    }
-
-    .status-open .status-value {
-        color: var(--open);
-    }
-
-    .status-pending .status-value {
-        color: var(--pending);
-    }
-
-    .status-resolved .status-value {
-        color: var(--resolved);
-    }
-
-    .status-closed .status-value {
-        color: var(--closed);
-    }
-
-    /* Severity Cards */
-    .severity-card {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 16px;
-        display: flex;
-        align-items: center;
-        border: 1px solid #f1f1f1;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-        transition: all 0.2s ease;
-        height: 100%;
-    }
-
-    .severity-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    .severity-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 16px;
-        font-size: 20px;
-    }
-
-    .severity-critical .severity-icon {
-        background-color: rgba(217, 4, 41, 0.1);
-        color: var(--critical);
-    }
-
-    .severity-high .severity-icon {
-        background-color: rgba(247, 127, 0, 0.1);
-        color: var(--high);
-    }
-
-    .severity-medium .severity-icon {
-        background-color: rgba(76, 201, 240, 0.1);
-        color: var(--medium);
-    }
-
-    .severity-low .severity-icon {
-        background-color: rgba(173, 181, 189, 0.1);
-        color: var(--low);
-    }
-
-    .severity-title {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #6c757d;
-        margin-bottom: 4px;
-    }
-
-    .severity-value {
-        font-size: 1.8rem;
-        font-weight: 700;
-    }
-
-    .severity-critical .severity-value {
-        color: var(--critical);
-    }
-
-    .severity-high .severity-value {
-        color: var(--high);
-    }
-
-    .severity-medium .severity-value {
-        color: var(--medium);
-    }
-
-    .severity-low .severity-value {
-        color: var(--low);
-    }
-
-    /* Timeline Card */
-    .timeline-card {
-        background: linear-gradient(135deg, #254bf7ff 0%, #455ecaff 100%);
-        border-radius: 12px;
-        padding: 24px;
-        color: white;
-        position: relative;
-        overflow: hidden;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        transition: all 0.3s ease;
-    }
-
-    .timeline-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(67, 97, 238, 0.3);
-    }
-
-    .timeline-icon {
-        font-size: 32px;
-        margin-bottom: 16px;
-    }
-
-    .timeline-content h5 {
-        margin-bottom: 8px;
-    }
-
-    .timeline-action {
-        margin-top: 16px;
-    }
-
-    .timeline-decoration {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        pointer-events: none;
-    }
-
-    .decoration-circle {
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .circle-1 {
-        width: 80px;
-        height: 80px;
-        top: -20px;
-        right: -20px;
-    }
-
-    .circle-2 {
-        width: 60px;
-        height: 60px;
-        bottom: -15px;
-        left: -15px;
-    }
-
-    /* Reviewer Workload */
-    .workload-legend {
-        display: flex;
-        align-items: center;
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        margin-left: 16px;
-    }
-
-    .legend-color {
-        width: 12px;
-        height: 12px;
-        border-radius: 2px;
-        background-color: var(--primary);
-        margin-right: 6px;
-    }
-
-    .legend-text {
-        font-size: 0.8rem;
-        color: #6c757d;
-    }
-
-    .reviewer-item {
-        padding: 12px 0;
-        border-bottom: 1px solid #f1f1f1;
-    }
-
-    .reviewer-item:last-child {
-        border-bottom: none;
-    }
-
-    .reviewer-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background-color: var(--primary);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-    }
-
-    .reviewer-count {
-        font-weight: 600;
-        color: var(--dark);
-    }
-
-    .workload-progress {
-        height: 8px;
-        border-radius: 4px;
-        background-color: #e9ecef;
-    }
-
-    .workload-progress .progress-bar {
-        background-color: var(--primary);
-        border-radius: 4px;
-        transition: width 0.5s ease;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-    }
-
-    .empty-icon {
-        font-size: 48px;
-        color: #dee2e6;
-    }
-
-    /* Card Links */
-    .card-link {
-        display: block;
-        height: 100%;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .stat-card {
-            flex-direction: column;
-            text-align: center;
-        }
-        
-        .stat-icon {
-            margin-right: 0;
-            margin-bottom: 12px;
-        }
-        
-        .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .workload-legend {
-            margin-top: 8px;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('dash/css/styles.css') }}">
 
 <!-- Font Awesome for Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<!-- Chart.js (v4) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+<!-- Chart.js (v4) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // =========================
+    // 1) SHEET × STATUS HEATMAP
+    // =========================
+ 
+
+
+    // =========================
+    // 2) SLA / OVERDUE ANALYTICS
+    // =========================
+    fetch("{{ route('analytics.sla') }}")
+        .then(res => res.json())
+        .then(data => {
+
+            document.getElementById('slaActiveCount').textContent  = data.total_active ?? 0;
+            document.getElementById('slaOverdueCount').textContent = data.overdue_count ?? 0;
+            document.getElementById('slaAvgAge').textContent       = data.avg_age_days ?? 0;
+
+            const bucketsCtx = document.getElementById('slaAgeBucketsChart').getContext('2d');
+            new Chart(bucketsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0–3 days', '4–7', '8–14', '15+'],
+                    datasets: [{
+                        label: 'Active QA Items',
+                        data: [
+                            data.age_buckets?.['0_3'] ?? 0,
+                            data.age_buckets?.['4_7'] ?? 0,
+                            data.age_buckets?.['8_14'] ?? 0,
+                            data.age_buckets?.['15_plus'] ?? 0,
+                        ],
+                        backgroundColor: 'rgba(37, 99, 235, 0.4)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            const severityCtx = document.getElementById('slaSeverityChart').getContext('2d');
+            new Chart(severityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [
+                            data.severity_overdue?.critical ?? 0,
+                            data.severity_overdue?.high ?? 0,
+                            data.severity_overdue?.medium ?? 0,
+                            data.severity_overdue?.low ?? 0,
+                        ],
+                        backgroundColor: [
+                            '#dc2626',
+                            '#ea580c',
+                            '#f59e0b',
+                            '#16a34a'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    cutout: '60%'
+                }
+            });
+        });
+
+    // =========================
+    // 3) PHASE GATE ANALYTICS
+    // =========================
+    fetch("{{ route('analytics.phase-gates') }}")
+        .then(res => res.json())
+        .then(phases => {
+            const container = document.getElementById('phaseGatesContainer');
+
+            if (!phases || phases.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        No phases found yet.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            phases.forEach(p => {
+                const statusBadgeClass = (function () {
+                    switch (p.phase_status) {
+                        case 'CLOSED': return 'bg-success';
+                        case 'READY_FOR_SIGNOFF': return 'bg-primary';
+                        case 'CHANGES_REQUIRED': return 'bg-warning text-dark';
+                        case 'IN_REVIEW': return 'bg-info text-dark';
+                        default: return 'bg-secondary';
+                    }
+                })();
+
+                const card = document.createElement('div');
+                card.className = 'mb-3';
+
+                card.innerHTML =
+                    '<div class="border rounded p-3 bg-white">' +
+                        '<div class="d-flex justify-content-between align-items-center mb-2">' +
+                            '<div>' +
+                                '<strong>' + (p.project || '-') + '</strong>' +
+                                '<span class="text-muted"> · ' + p.phase_type + '</span>' +
+                            '</div>' +
+                            '<span class="badge ' + statusBadgeClass + '">' +
+                                (p.phase_status || 'N/A') +
+                            '</span>' +
+                        '</div>' +
+
+                        '<div class="progress mb-2" style="height: 10px;">' +
+                            '<div class="progress-bar" role="progressbar"' +
+                                ' style="width: ' + (p.percent_complete ?? 0) + '%;"' +
+                                ' aria-valuenow="' + (p.percent_complete ?? 0) + '"' +
+                                ' aria-valuemin="0" aria-valuemax="100">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="d-flex justify-content-between small text-muted mb-2">' +
+                            '<span>Completed: ' + p.completed + '/' + p.total_items + '</span>' +
+                            '<span>Blocking: ' + p.blocking + ' (' + p.critical_blocking + ' critical)</span>' +
+                        '</div>' +
+
+                        '<div class="d-flex justify-content-between small">' +
+                            '<span>' +
+                                (p.eta_signoff
+                                    ? 'Estimated Ready For Signoff: <strong>' + p.eta_signoff + '</strong>'
+                                    : 'No ETA — all blocking items cleared or not enough data') +
+                            '</span>' +
+                        '</div>' +
+                    '</div>';
+
+                container.appendChild(card);
+            });
+        });
+
+    // =========================
+    // 4) PHASE BURN-DOWN CHART
+    // =========================
+
+    // -------------------------------
+    // PHASE BURNDOWN CHART (FIXED)
+    // -------------------------------
+    
+    let select = document.getElementById("burndownPhaseFilter");
+    let chart = null;
+
+    if (select) {
+
+        select.addEventListener("change", () => {
+            const phaseId = select.value;
+            if (!phaseId) return;
+
+            fetch(`/analytics/phase-burndown?phase_id=${phaseId}`)
+                .then(r => r.json())
+                .then(data => {
+
+                    const ctx = document.getElementById("phaseBurndownChart").getContext("2d");
+
+                    if (chart) chart.destroy();
+
+                    chart = new Chart(ctx, {
+                        type: "line",
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: "Remaining QA Items",
+                                data: data.remaining,
+                                borderColor: "#E11D48",
+                                backgroundColor: "rgba(225,29,72,0.25)",
+                                borderWidth: 2.5,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: "bottom" } },
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: "Days (Last 30 Days)",
+                                        font: { size: 13, weight: "bold" }
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: "Remaining QA Items",
+                                        font: { size: 13, weight: "bold" }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                });
+        });
+    }
+
+
+
+
+});
+
+
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    loadHeatmap();
+
+    document.getElementById("heatmapProjectFilter").addEventListener("change", loadHeatmap);
+function loadHeatmap() {
+
+    let projectId = document.getElementById("heatmapProjectFilter").value || "";
+    let phaseId   = document.getElementById("heatmapPhaseFilter").value || "";
+
+    fetch(`/analytics/sheet-heatmap?project_id=${projectId}&phase_id=${phaseId}`)
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('sheetHeatmapBody');
+            tbody.innerHTML = "";
+
+
+                if (!data.rows || data.rows.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">No data available.</td>
+                        </tr>`;
+                    return;
+                }
+
+             //   let lastGroup = "";
+
+                let headerPhase = data.rows[0]?.phase || "-";
+              let headerProject = data.rows[0]?.project || "-";
+
+      document.getElementById("heatmapHeaderInfo").innerHTML =
+      `Phase: <span class="text-primary">${headerPhase}</span> → 
+       Project: <span class="text-primary">${headerProject}</span>`;
+
+                data.rows.forEach(row => {
+
+                    let groupTitle = `Phase: ${row.phase || '-'} → Project: ${row.project || '-'}`;
+
+                    // Group Header
+              /*      if (groupTitle !== lastGroup) {
+                        lastGroup = groupTitle;
+                        tbody.innerHTML += `
+                            <tr class="table-group-row">
+                                <td colspan="11" class="fw-bold bg-light text-dark py-2">${groupTitle}</td>
+                            </tr>`;
+                    }*/
+
+                    const total = row.total;
+
+                    let statusCells = "";
+                    data.statuses.forEach(st => {
+                        const val = row[st] ?? 0;
+                        const bg = val > 0 ? "rgba(37,99,235,0.9)" : "transparent";
+                        const color = val > 0 ? "white" : "#333";
+
+                        statusCells += `
+                            <td class="text-center">
+                                <span class="badge heatmap-click"
+                                    data-sheet="${row.sheet_id}"
+                                    data-status="${st}"
+                                    style="cursor:pointer; background:${bg}; color:${color}; min-width:32px;">
+                                    ${val}
+                                </span>
+                            </td>`;
+                    });
+
+            
+                        tbody.innerHTML += `
+    <tr>
+        <td>${row.sheet_label}</td>
+        <td class="text-center fw-bold">${row.total}</td>
+        ${statusCells}
+        <td class="text-center text-primary fw-bold">${row.a_count}</td>
+        <td class="text-center text-info fw-bold">${row.i_count}</td>
+        <td class="text-center text-success fw-bold">${row.c_count}</td>
+    </tr>`;
+
+                });
+
+            })
+            .catch(err => {
+                console.error("Heatmap error:", err);
+                tbody.innerHTML = `
+                    <tr><td colspan="11" class="text-danger text-center py-3">
+                        Error loading heatmap
+                    </td></tr>`;
+            });
+    }
+
+});
+</script>
+
+  
+<!-- أزل هذا المودال بالكامل -->
+<!--
+<div class="modal fade" id="qaItemsModal" tabindex="-1">
+    ...
+</div>
+-->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const filter = document.getElementById("projectProgressFilter");
+    const container = document.getElementById("projectProgressContainer");
+
+    function loadProject(projectId) {
+
+        fetch(`/analytics/project-progress?project_id=${projectId}`)
+            .then(res => res.json())
+            .then(data => {
+
+                if (!data.project) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            No project found.
+                        </div>`;
+                    return;
+                }
+
+                let p = data.project;
+
+                container.innerHTML = `
+<div class="project-card shadow-sm p-4 mb-4 rounded">
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="fw-bold text-primary m-0">${p.name}</h5>
+        <span class="badge bg-primary px-3 py-2">${p.progress}%</span>
+    </div>
+
+    <div class="progress stylish-progress mb-3">
+        <div class="progress-bar dynamic-bar" style="width:${p.progress}%"></div>
+    </div>
+
+    ${p.phases.map(phase => `
+        <div class="phase-block mt-3">
+
+            <div class="d-flex justify-content-between align-items-center">
+                <strong class="text-dark">${phase.type}</strong>
+                <span class="text-muted small">${phase.progress}%</span>
+            </div>
+
+            <div class="progress stylish-progress-sm mb-1">
+                <div class="progress-bar phase-bar" style="width:${phase.progress}%"></div>
+            </div>
+
+            <div class="sheet-bubbles mt-2">
+                ${phase.sheets.map(sheet => `
+                    <span class="sheet-pill" title="${sheet.title}">
+                        ${sheet.number}
+                        <span class="sheet-progress" style="width:${sheet.progress}%"></span>
+                    </span>
+                `).join("")}
+            </div>
+
+        </div>
+    `).join("")}
+
+</div>`;
+            });
+    }
+
+    // ---- LOAD LATEST PROJECT ON PAGE LOAD ----
+    let latestProjectId = "{{ $latest_project_id }}";
+
+    if (latestProjectId) {
+        filter.value = latestProjectId; // select it in the dropdown
+        loadProject(latestProjectId);   // load automatically
+    }
+
+    // ---- LOAD NEW PROJECT WHEN FILTER CHANGES ----
+    filter.addEventListener("change", function () {
+        let projectId = this.value || latestProjectId;
+        loadProject(projectId);
+    });
+});
+
+</script>
+
+
 @endsection
+

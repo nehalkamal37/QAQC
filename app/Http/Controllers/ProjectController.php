@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;  
+use App\Models\Role;
 
 class ProjectController extends Controller
 {
@@ -17,7 +20,12 @@ class ProjectController extends Controller
     // عرض صفحة إنشاء مشروع جديد
     public function create()
     {
-        return view('projects.create');
+        $pmRoleId = Role::where('name', 'PM')->value('id');
+
+        $pm = User::where('role_id', $pmRoleId)->get();
+
+
+        return view('projects.create', compact('pm'));
     }
 
     // حفظ مشروع جديد
@@ -26,6 +34,8 @@ class ProjectController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'client' => 'nullable|string|max:255',
+            'pm_id' => 'nullable|exists:users,id',
+            'status' => 'nullable|string|max:255',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
         ]);
@@ -45,7 +55,13 @@ class ProjectController extends Controller
     // عرض صفحة تعديل مشروع
     public function edit(Project $project)
     {
-        return view('projects.edit', compact('project'));
+
+        $pmRoleId = Role::where('name', 'PM')->value('id');
+
+        $pm = User::where('role_id', $pmRoleId)->get();
+
+
+        return view('projects.edit', compact('project', 'pm'));
     }
 
     // تحديث مشروع
@@ -54,6 +70,7 @@ class ProjectController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'client' => 'nullable|string|max:255',
+            'pm_id' => 'nullable|exists:users,id',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'status' => 'nullable|string|max:255',

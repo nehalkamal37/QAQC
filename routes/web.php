@@ -9,6 +9,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\PhaseStatusController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\ChecklistController;
+    use App\Services\NotificationService;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\QcUploadController;
+use App\Http\Controllers\PhaseKanbanController;
 
 // ======================
 // Auth routes
@@ -132,6 +138,29 @@ Route::delete('/timeline/{id}', [\App\Http\Controllers\TimelineController::class
                 ->name('qa_items.importForm');
             Route::post('qa-items/import-preview', [QaItemController::class, 'importPreview'])
                 ->name('qa_items.importPreview');
+            Route::post('qa-items/import-confirm', [QaItemController::class, 'importConfirm'])
+            ->name('qa_items.importConfirm');
+
+
+// PDF Import Routes
+/*
+Route::get('qa-items/import-pdf', [QaItemController::class, 'importPdfForm'])
+    ->name('qa_items.importPdfForm');
+
+Route::post('qa-items/import-pdf-preview', [QaItemController::class, 'importPdfPreview'])
+    ->name('qa_items.importPdfPreview');
+
+Route::post('qa-items/import-pdf-confirm', [QaItemController::class, 'importPdfConfirm'])
+    ->name('qa_items.importPdfConfirm');
+
+Route::post('/sheets/{sheet}/qa-items/import-pdf-preview', [QaItemController::class, 'importPdfPreview'])
+    ->name('qa_items.importPdfPreview');
+*/
+
+// PDF Import Routes
+
+
+
 
             // Verify all items داخل نفس الـ sheet
             Route::post('qa-items/verify-all', [QaItemController::class, 'verifyAll'])
@@ -169,6 +198,340 @@ Route::delete('/timeline/{id}', [\App\Http\Controllers\TimelineController::class
     });
 });
 
+
+// ============================
+// PDF IMPORT ROUTES (GLOBAL)
+// ============================
+
+Route::get('/sheet/{sheet}/qa/import-pdf',
+    [QaItemController::class, 'importPdfForm'])
+    ->name('qa_items.importPdfForm');
+
+Route::post('/sheet/{sheet}/qa/import-pdf-preview',
+    [QaItemController::class, 'importPdfPreview'])
+    ->name('qa_items.importPdfPreview');
+
+Route::post('/sheet/{sheet}/qa/import-pdf-confirm',
+    [QaItemController::class, 'importPdfConfirm'])
+    ->name('qa_items.importPdfConfirm');
+
 // backup home route (لو لسه بتستخدمه)
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])
     ->name('home');
+
+
+
+
+    // assignments routes
+Route::resource('assignments', AssignmentController::class);
+Route::post('assignments/bulk', [AssignmentController::class, 'bulkAssign'])->name('assignments.bulk');
+
+// routes/api.php
+Route::get('/projects/{project}/phases', function (Project $project) {
+    return $project->phases;
+});
+
+
+// my work dashboard route
+Route::get('/my-work', [DashboardController::class, 'myWork'])->name('dashboard.my-work');
+// routes/web.php
+
+// Option A: Resource route (recommended)
+Route::resource('qa-items', App\Http\Controllers\QaItemController::class);
+
+// Option B: Individual routes
+Route::get('/qa-items/{qa_item}', [App\Http\Controllers\QaItemController::class, 'show'])->name('qa_items.show');
+
+// assign to me route if item not assigned to anyone
+Route::post('/qa-items/{qa_item}/assign-to-me', [QaItemController::class, 'assignToMe'])->name('qa_items.assign-to-me');
+
+// route for status updates for the assigned QA items
+Route::post('/qa-items/{qa_item}/assign-to-me', [QaItemController::class, 'assignToMe'])->name('qa_items.assign-to-me');
+Route::patch('/qa-items/{qa_item}/update-status', [QaItemController::class, 'updateStatusAssigned'])->name('qa_items.update-status');
+
+// pdf checklist upload route
+Route::post('/upload-checklist', [ChecklistController::class, 'uploadChecklist'])->name('upload.checklist');
+Route::get('/checked-items/{projectNumber}', [ChecklistController::class, 'getCheckedItems']);
+
+// routes/web.php
+Route::get('/test-system', [ChecklistController::class, 'testSystem']);
+
+Route::get('/test-sample-data', [ChecklistController::class, 'testWithSampleData']);
+
+Route::get('/debug-pdf-text', [ChecklistController::class, 'debugPdfText']);
+
+Route::post('/debug-pdf', [ChecklistController::class, 'debugPdfExtraction']);
+
+Route::get('/debug-form', [ChecklistController::class, 'debugPdfForm']);
+
+Route::post('/test-mapping', [ChecklistController::class, 'testMapping']);
+
+
+// notifications routes
+Route::prefix('notifications')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+});
+
+
+// routes/web.php - Add this temporary route for testing
+Route::get('/test-notifications', function () {
+    
+    // Create test notifications for current user
+    NotificationService::send(
+        auth()->id(),
+        'test',
+        'Test Notification',
+        'This is a test notification to verify the system is working.'
+    );
+    
+    NotificationService::notifyAssignment(
+        auth()->id(),
+        'Test Project',
+        'Engineer',
+        'System Admin'
+    );
+
+    return redirect('/')->with('success', 'Test notifications created!');
+});
+
+
+// routes/web.php - Update the test route
+Route::get('/test-due-date-notification', function () {
+    
+    // Get a real QA item with due date, or create a test one
+    $qaItem = \App\Models\QaItem::whereNotNull('due_date')->first();
+    
+    if ($qaItem && $qaItem->due_date) {
+        $daysUntilDue = $qaItem->due_date->diffInDays(now());
+        
+        NotificationService::notifyDueDateReminder(
+            auth()->id(),
+            $qaItem->id,
+            $daysUntilDue
+        );
+        
+        return redirect('/')->with('success', "Due date notification created! Item due in {$daysUntilDue} days");
+    } else {
+        // Create a test item with due date
+        $qaItem = \App\Models\QaItem::first();
+        if ($qaItem) {
+            $qaItem->update(['due_date' => now()->addDays(2)]);
+            $daysUntilDue = 2;
+            
+            NotificationService::notifyDueDateReminder(
+                auth()->id(),
+                $qaItem->id,
+                $daysUntilDue
+            );
+            
+            return redirect('/')->with('success', "Test due date notification created! Item due in 2 days");
+        }
+    }
+    
+    return redirect('/')->with('error', 'No QA items found to test due dates');
+});
+
+
+// routes/api.php
+
+
+Route::post('/qc-upload', [QcUploadController::class, 'upload']);
+
+Route::get('/qc-checklist', [QcUploadController::class, 'viewChecklist']);
+
+Route::get('/qc-test', function () {
+    \App\Models\QcItem::truncate();
+
+    \App\Models\QcItem::insert([
+        [
+            'item_text' => 'Find applicable codes and amendments',
+            'applicable' => false,
+            'incorporated' => false,
+            'confirmed' => false,
+        ],
+        [
+            'item_text' => 'Water supply flow test data incorporated into design',
+            'applicable' => true,
+            'incorporated' => true,
+            'confirmed' => true,
+        ],
+        [
+            'item_text' => 'Domestic Water Heater Schedule',
+            'applicable' => false,
+            'incorporated' => false,
+            'confirmed' => false,
+        ],
+    ]);
+
+    return 'Test data inserted! Go to /qc-checklist';
+});
+
+
+//Route::get('/upload-checklist', [ChecklistController::class, 'showForm'])->name('checklist.form');
+
+Route::post('/upload-checklist', [ChecklistController::class, 'preview'])
+    ->name('checklist.preview');
+
+
+    // Kanban Board Routes
+
+Route::middleware(['auth'])->group(function () {
+    // Kanban Board Routes
+    Route::get('/phases/{phase}/kanban', [PhaseKanbanController::class, 'show'])->name('phases.kanban');
+    Route::patch('/qa-items/{qaItem}/status', [PhaseKanbanController::class, 'updateQaItemStatus'])->name('qa-items.status.update');
+    Route::post('/phases/{phase}/kanban/bulk-update', [PhaseKanbanController::class, 'bulkUpdate'])->name('phases.kanban.bulk-update');
+    
+    // Add Kanban link to your existing phases index
+    Route::get('/projects/{project}/phases', [PhaseController::class, 'index'])->name('phases.index');
+
+    Route::get('/qa-items/{qaItem}/details', [PhaseKanbanController::class, 'getItemDetails'])->name('qa-items.details');
+});
+
+// routes/web.php
+Route::get('/read-pdf', [App\Http\Controllers\PdfController::class, 'read']);
+
+
+Route::get('/pdf/python', [App\Http\Controllers\PdfController::class, 'readWithPython']);
+
+Route::get('py', function () {
+    return view('python.extract_pdf_fields.py');
+});
+
+
+
+// pdf from python code 
+
+
+
+// PDF Upload and Processing Routes
+
+
+
+// Remove any duplicate routes and use this:
+//Route::get('/upload-checklist', [ChecklistController::class, 'showUploadForm'])->name('checklist.upload');
+Route::post('/upload-checklist', [ChecklistController::class, 'uploadAndSave'])->name('checklist.upload.save');
+
+// Remove any other checklist routes that might be conflicting
+
+
+      // pdf upload routes
+Route::post('/checklist/preview', [ChecklistController::class, 'preview'])
+     ->name('checklist.preview');
+
+Route::post('/checklist/import/{sheet}', [ChecklistController::class, 'import'])
+     ->name('qa_items.importPdfConfirm');
+Route::post('/checklist/upload/save', [ChecklistController::class, 'uploadAndSave'])
+    ->name('checklist.upload.save');
+
+    Route::get('/upload-checklist', [ChecklistController::class, 'showForm'])
+    ->name('checklist.upload');
+
+    // csv upload routes
+
+    Route::post('/checklist/upload-excel', [ChecklistController::class, 'uploadExcelAndSave'])
+    ->name('checklist.upload.excel.save');
+
+
+    Route::get('/upload-checklist2', [ChecklistController::class, 'showForm2'])
+    ->name('checklist.upload.csv');
+
+    // routes/web.php
+Route::get('/checklist/upload-excel', [ChecklistController::class, 'showForm2'])
+    ->name('checklist.upload.excel.form');
+
+
+    
+
+Route::get('/projects/{project}/phases', function (Project $project) {
+    return $project->phases()->select('id', 'type')->get();
+});
+
+Route::get('/phases/{phase}/sheets', function (Phase $phase) {
+    return $phase->sheets()->select('id', 'number', 'title')->get();
+});
+
+// dashboard qa progress route
+
+Route::get('/analytics/project-progress', [DashboardController::class, 'ajaxProjectProgress']);
+
+Route::get('/analytics/project-phases', function (Request $r) {
+    return \App\Models\Phase::where('project_id', $r->project_id)
+        ->select('id', 'type')
+        ->orderBy('id')
+        ->get();
+});
+
+    Route::get('/test-email', function () {
+    return \App\Services\NotificationService::notifyAssignment(
+        1,                      // user_id
+        "Project ABC",          // project name
+        "Developer",            // role
+        "Admin"                 // assigned by
+    );
+});
+
+Route::get('/mailtest', function () {
+    try {
+        Mail::raw('Hello from Mailtrap!', function ($message) {
+            $message->to('nehalk751@gmail.com')->subject('SMTP Test');
+        });
+
+        return "Mail sent!";
+    } catch (\Exception $e) {
+        return $e->getMessage();
+    }
+});
+
+// analytics routes for dashboard   
+Route::get('/analytics/qa-trend', [DashboardController::class, 'qaTrend']);
+// Dashboard QA Trend Endpoint
+Route::get('/analytics/qa-trend', [DashboardController::class, 'qaTrend'])
+    ->name('analytics.qa-trend');
+
+
+// Dashboard Phase Progress Endpoint
+
+Route::get('/analytics/qa-trend', [DashboardController::class, 'qaTrend'])->name('analytics.qa-trend');
+
+Route::get('/analytics/sheet-heatmap', [DashboardController::class, 'sheetStatusHeatmap'])
+    ->name('analytics.sheet-heatmap');
+
+Route::get('/analytics/phase-gates', [DashboardController::class, 'phaseGateAnalytics'])
+    ->name('analytics.phase-gates');
+
+Route::get('/analytics/sla', [DashboardController::class, 'slaAnalytics'])
+    ->name('analytics.sla');
+   
+Route::get('/analytics/qa-trend-project', [DashboardController::class, 'qaTrendProject'])
+    ->name('analytics.qa-trend-project');
+
+    Route::get('/phases/by-project/{project}', function ($projectId) {
+    return \App\Models\Phase::where('project_id', $projectId)
+        ->orderBy('type')
+        ->get(['id', 'type']);
+});
+
+
+Route::get('/analytics/qa-items', [DashboardController::class, 'getQaItems']);
+
+Route::get('/analytics/phase-burndown', 
+    [DashboardController::class, 'phaseBurndown'])
+    ->name('analytics.phase-burndown');
+
+
+    // Test route for debugging
+Route::get('/test-qa-items', function() {
+    $sheetId = request('sheet_id', 3);
+    $status = request('status', 'open');
+    
+    $items = \App\Models\QaItem::where('sheet_id', $sheetId)
+        ->with(['sheet', 'assigneeUser', 'projectStatus'])
+        ->get();
+    
+        return dd($items);
+
+
+});

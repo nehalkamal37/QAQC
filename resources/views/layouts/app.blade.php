@@ -16,7 +16,7 @@
 
 	<link rel="canonical" href="https://demo-basic.adminkit.io/" />
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'SSR') }}</title>
 
 	<link href="{{ asset('dash/css/app.css ') }}" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -27,21 +27,29 @@
 		<nav id="sidebar" class="sidebar js-sidebar">
 			<div class="sidebar-content js-simplebar">
 				<a class="sidebar-brand" href="index.html">
-          <span class="align-middle">AdminKit</span>
+          <span class="align-middle">SSR</span>
         </a>
 
 				<ul class="sidebar-nav">
 					<li class="sidebar-header">
 						Pages
 					</li>
-                   
 
+			
+					
 <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
 						<a class="sidebar-link" href="{{ route('dashboard') }}">
               <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Dashboard</span>
             </a>
 					</li>
-			
+					                   
+
+<li class="sidebar-item {{ request()->routeIs('checklist.upload') ? 'active' : '' }}">
+						<a class="sidebar-link" href="{{ route('checklist.upload') }}">
+              <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">QA Items Upload</span>
+            </a>
+					</li>
+
 <li class="sidebar-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
     <a class="sidebar-link" href="{{ route('projects.index') }}">
         <i class="align-middle" data-feather="folder"></i> <span class="align-middle">Projects</span>
@@ -58,13 +66,52 @@
 			</a>
 					</li>
 					
-					<li class="sidebar-item {{ request()->routeIs('qa_items.*') ? 'active' : '' }}">
+				<!--	<li class="sidebar-item {{ request()->routeIs('qa_items.*') ? 'active' : '' }}">
 						<a class="sidebar-link" href="{{ route('qa_items.indexAll') }}">
 			  <i class="align-middle" data-feather="check-circle"></i> <span class="align-middle">QA Items</span>
 			</a>
 
-					</li>
+					</li>  -->
+
 					
+{{-- resources/views/layouts/app.blade.php --}}
+<li class="sidebar-item">
+    <a class="sidebar-link" href="{{ route('notifications.index') }}">
+        <i class="align-middle" data-feather="bell"></i>
+        <span class="align-middle">Notifications</span>
+        @php
+            $unreadCount = auth()->check() ? \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count() : 0;
+        @endphp
+        @if($unreadCount > 0)
+            <span class="sidebar-badge badge bg-danger rounded-pill">{{ $unreadCount }}</span>
+        @endif
+    </a>
+</li>
+
+					
+{{-- resources/views/layouts/app.blade.php --}}
+{{-- Add this to your sidebar navigation --}}
+<li class="sidebar-item {{ request()->routeIs('assignments.*') ? 'active' : '' }}">
+						<a class="sidebar-link" href="{{ route('assignments.index') }}">
+			  <i class="align-middle" data-feather="check-circle"></i> <span class="align-middle">Team Assignments</span>
+			</a>
+
+					</li>
+
+					<li class="sidebar-item {{ request()->routeIs('dashboard.my-work') ? 'active' : '' }}">
+						<a class="sidebar-link" href="{{  route('dashboard.my-work') }}">
+	  <i class="align-middle" data-feather="check-circle"></i> <span class="align-middle"> My Work
+		 @php
+            $assignedCount = auth()->check() ? auth()->user()->activeAssignments->count() : 0;
+        @endphp
+		@if($assignedCount > 0)
+            <span class="badge bg-danger rounded-pill ms-1">{{ $assignedCount }}</span>
+        @endif</span>
+			</a>
+
+					</li>
+
+
 <li class="sidebar-item {{ request()->routeIs('profile') ? 'active' : '' }}">
     <a class="sidebar-link" href="{{ route('profile') }}">
         <i class="align-middle" data-feather="user"></i> <span class="align-middle">Profile</span>
@@ -76,6 +123,9 @@
   <i class="align-middle" data-feather="file-text"></i>        <span class="align-middle">Electrical QC Checklist</span>
     </a>
 </li>
+
+
+
 
 
 					@guest

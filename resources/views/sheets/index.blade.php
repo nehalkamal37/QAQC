@@ -130,13 +130,21 @@
                                 </a>
 
                                 @if($sheet->qaItems->count() == 0)
-                                    <form action="{{ route('sheets.generateFromMaster', $sheet->id) }}"
+                                
+         <a href="{{ route('checklist.upload') }}" class="btn btn-sm btn-primary">
+
+                                            ⚡ Upload CSV
+                                        </a>
+                                        
+                                
+                                {{--<form action="{{ route('sheets.generateFromMaster', $sheet->id) }}"
                                           method="POST" class="d-inline">
                                         @csrf
                                         <button class="btn btn-sm btn-primary">
                                             ⚡ Generate CSV
                                         </button>
                                     </form>
+                                    --}}
                                 @endif
 
                                 @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer','Reviewer']))

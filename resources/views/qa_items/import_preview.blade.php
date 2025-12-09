@@ -2,39 +2,46 @@
 
 @section('content')
 <div class="container-fluid px-4 mt-4">
-    <h2 class="mb-4">Preview Imported QA Items for: {{ $sheet->title }}</h2>
+    <h2 class="mb-4">Preview Imported QA Items for Sheet: {{ $sheet->title }}</h2>
 
-    @if(count($previewData))
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-striped align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Description</th>
-                        <th>Status</th>
-                        <th>Due Date</th>
-                        <th>Assigned To</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($previewData as $item)
-                    <tr>
-                        <td>{{ $item['description'] }}</td>
-                        <td>{{ $item['status'] }}</td>
-                        <td>{{ $item['due_date'] }}</td>
-                        <td>{{ $item['assigned_to'] }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @else
-        <div class="alert alert-warning">No data found in the uploaded Excel file.</div>
-    @endif
+<form action="{{ route('qa_items.importConfirm', $sheet->id) }}" method="POST">
+    @csrf
+    <button class="btn btn-primary mt-3">Confirm Import</button>
+</form>
 
-    <div class="mt-3">
-        <a href="{{ route('qa_items.index', $sheet->id) }}" class="btn btn-secondary">← Back to QA Items</a>
+
+ <table class="table table-bordered mt-4">
+    <thead>
+        <tr>
+            <th>Topic</th>
+            <th>Category</th>
+            <th>Item</th>
+            <th>Notes</th>
+            <th>Status</th>
+            <th>Due Date</th>
+            <th>Assigned To</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($previewData as $row)
+        <tr>
+            <td>{{ $row['topic'] ?? '' }}</td>
+            <td>{{ $row['category'] ?? '' }}</td>
+            <td>{{ $row['item'] ?? '' }}</td>
+            <td>{{ $row['notes'] ?? '' }}</td>
+            <td>{{ $row['status'] ?? 'open' }}</td>
+            <td>{{ $row['due_date'] ?? '' }}</td>
+            <td>{{ $row['assigned_to'] ?? '' }}</td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+
+
+    <div class="mt-4">
+        <a href="{{ route('qa_items.index', $sheet->id) }}" class="btn btn-secondary">
+            ← Back to QA Items
+        </a>
     </div>
 </div>
 @endsection

@@ -73,6 +73,14 @@
 
                         {{-- ACTIONS COLUMN --}}
                         <td>
+{{-- In your existing phases/index.blade.php --}}
+{{-- Add this in the actions column --}}
+
+{{-- Kanban Board Button --}}
+<a href="{{ route('phases.kanban', $phase->id) }}" class="btn btn-sm btn-success">
+    <i class="fas fa-columns me-1"></i> Kanban
+</a>
+
 
                             {{-- Everyone can access Sheets --}}
                             <a href="{{ route('sheets.index', $phase->id) }}" class="btn btn-sm btn-info">

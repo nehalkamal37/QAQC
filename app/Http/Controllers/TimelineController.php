@@ -7,7 +7,99 @@ use Illuminate\Http\Request;
 
 class TimelineController extends Controller
 {
+
     public function index(Request $request)
+{
+    $user        = $request->user;
+    $action      = $request->action;
+    $project     = $request->project;
+    $severity    = $request->severity;
+    $search      = $request->search;
+    $item_id     = $request->item_id;
+
+    // New Filters
+    $assignedTo  = $request->assigned_to;
+    $applicable  = $request->applicable;
+    $incorporated = $request->incorporated;
+    $confirmed   = $request->confirmed;
+    $dueFrom     = $request->due_from;
+    $dueTo       = $request->due_to;
+
+    $logs = ActivityLog::with(['user','project','phase','sheet','item'])
+
+        // User
+        ->when($user, fn($q) => $q->where('user_id', $user))
+
+        // Action Type
+        ->when($action, fn($q) => $q->where('action_type', $action))
+
+        // Project
+        ->when($project, fn($q) => $q->where('project_id', $project))
+
+        // QA Item ID
+        ->when($item_id, fn($q) => $q->where('qa_item_id', $item_id))
+
+        // Severity (belongs to QA Item)
+        ->when($severity, fn($q) =>
+            $q->whereHas('item', fn($i) => $i->where('severity', $severity))
+        )
+
+        // 🔥 New: Assigned To filter (project-level)
+        ->when($assignedTo, fn($q) =>
+            $q->whereJsonContains('new_value->assigned_to', $assignedTo)
+        )
+
+        // 🔥 New: Applicable filter
+        ->when(!is_null($applicable), fn($q) =>
+            $q->whereJsonContains('new_value->applicable', (int)$applicable)
+        )
+
+        // 🔥 New: Incorporated filter
+        ->when(!is_null($incorporated), fn($q) =>
+            $q->whereJsonContains('new_value->incorporated', (int)$incorporated)
+        )
+
+        // 🔥 New: Confirmed filter
+        ->when(!is_null($confirmed), fn($q) =>
+            $q->whereJsonContains('new_value->confirmed', (int)$confirmed)
+        )
+
+        // 🔥 New: Due date range
+        ->when($dueFrom, fn($q) =>
+            $q->where('new_value->due_date', '>=', $dueFrom)
+        )
+        ->when($dueTo, fn($q) =>
+            $q->where('new_value->due_date', '<=', $dueTo)
+        )
+
+        // 🔥 Extended Search
+        ->when($search, fn($q) =>
+            $q->where(function($sub) use ($search) {
+                $sub->where('note','like',"%$search%")
+                    ->orWhereHas('item', fn($i) =>
+                        $i->where('item_description','like',"%$search%")
+                    )
+                    ->orWhereJsonContains('new_value->comments', $search)
+                    ->orWhereJsonContains('new_value->status', $search)
+                    ->orWhereJsonContains('new_value->assigned_to', $search)
+                    ->orWhereJsonContains('new_value->due_date', $search)
+                    ->orWhereJsonContains('new_value->applicable', $search)
+                    ->orWhereJsonContains('new_value->incorporated', $search)
+                    ->orWhereJsonContains('new_value->confirmed', $search);
+            })
+        )
+
+        ->orderBy('created_at', 'desc')
+        ->paginate(25)
+        ->withQueryString();
+
+    return view('timeline.index', compact(
+        'logs','user','action','project','severity','search','item_id',
+        'assignedTo','applicable','incorporated','confirmed','dueFrom','dueTo'
+    ));
+}
+
+    public function index1(Request $request)
     {
         $user      = $request->user;
         $action    = $request->action;

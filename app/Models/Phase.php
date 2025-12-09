@@ -69,18 +69,157 @@ public function isCompleted()
 {
     return $this->completionPercentage() == 100;
 }
-
 public function sheets()
 {
-    return $this->hasManyThrough(
-        Sheet::class,
-        Phase::class,
-        'project_id', // phases.project_id
-        'phase_id',   // sheets.phase_id
-        'id',         // projects.id
-        'id'          // phases.id
-    );
+    return $this->hasMany(Sheet::class);
 }
 
 
+
+
+
+    // ============ KANBAN SPECIFIC METHODS ============
+    
+    public function getKanbanColumns()
+    {
+        return [
+            'open' => [
+                'title' => 'Open', 
+                'color' => 'bg-red-50', 
+                'statuses' => ['open']
+            ],
+            'in_progress' => [
+                'title' => 'In Progress', 
+                'color' => 'bg-yellow-50', 
+                'statuses' => ['in_progress']
+            ],
+            'needs_info' => [
+                'title' => 'Needs Info', 
+                'color' => 'bg-orange-50', 
+                'statuses' => ['needs_info']
+            ],
+            'resolved' => [
+                'title' => 'Resolved', 
+                'color' => 'bg-green-50', 
+                'statuses' => ['resolved']
+            ],
+            'verified' => [
+                'title' => 'Verified', 
+                'color' => 'bg-blue-50', 
+                'statuses' => ['verified']
+            ],
+            'closed' => [
+                'title' => 'Closed', 
+                'color' => 'bg-gray-50', 
+                'statuses' => ['closed']
+            ],
+        ];
+    }
+/*
+    public function getQaItemsWithFilters($filters = [])
+    {
+        $query = QAItem::whereHas('sheet', function($q) {
+            $q->where('phase_id', $this->id);
+        })
+        ->with(['sheet', 'assignedUser', 'attachments']);
+
+        // Apply filters
+        if (!empty($filters['discipline'])) {
+            $query->whereHas('sheet', function($q) use ($filters) {
+                $q->where('discipline', $filters['discipline']);
+            });
+        }
+
+        if (!empty($filters['severity'])) {
+            $query->where('severity', $filters['severity']);
+        }
+
+        if (!empty($filters['assigned_to'])) {
+            $query->where('assigned_to', $filters['assigned_to']);
+        }
+
+        if (!empty($filters['category'])) {
+            $query->where('category', $filters['category']);
+        }
+
+        return $query->get()->groupBy('status');
+    }
+*/
+   
+ 
+    
+
+
+    public function getAssignees()
+    {
+        $assignees = User::whereIn('id', 
+            QAItem::whereHas('sheet', function($q) {
+                $q->where('phase_id', $this->id);
+            })->pluck('assigned_to')->filter()->unique()
+        )->get();
+
+        logger('Assignees found:', ['count' => $assignees->count()]);
+
+        return $assignees;
+    }
+
+    public function getDisciplineOptions()
+    {
+        $options = Sheet::where('phase_id', $this->id)
+            ->distinct()
+            ->pluck('discipline');
+
+        logger('Discipline options:', ['options' => $options->toArray()]);
+
+        return $options;
+    }
+
+// In your Phase model
+public function getQaItemsWithFilters($filters = [])
+{
+    $query = QAItem::whereHas('sheet', function($q) {
+        $q->where('phase_id', $this->id);
+    })
+    ->with(['sheet', 'assignedUser', 'attachments']);
+
+    // DEBUG: Log the filters being applied
+    logger('Applying Filters:', [
+        'phase_id' => $this->id,
+        'filters_received' => $filters
+    ]);
+
+    // Apply filters
+    if (!empty($filters['discipline'])) {
+        $query->whereHas('sheet', function($q) use ($filters) {
+            $q->where('discipline', $filters['discipline']);
+        });
+        
+        logger('Applied discipline filter:', ['discipline' => $filters['discipline']]);
+    }
+
+    if (!empty($filters['severity'])) {
+        $query->where('severity', $filters['severity']);
+        logger('Applied severity filter:', ['severity' => $filters['severity']]);
+    }
+
+    if (!empty($filters['assigned_to'])) {
+        $query->where('assigned_to', $filters['assigned_to']);
+        logger('Applied assigned_to filter:', ['assigned_to' => $filters['assigned_to']]);
+    }
+
+    if (!empty($filters['category'])) {
+        $query->where('category', $filters['category']);
+        logger('Applied category filter:', ['category' => $filters['category']]);
+    }
+
+    $results = $query->get();
+    
+    logger('Filter Results:', [
+        'total_results' => $results->count(),
+        'status_distribution' => $results->groupBy('status')->map->count()
+    ]);
+
+    return $results;
+}
+    
 }

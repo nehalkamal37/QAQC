@@ -20,6 +20,19 @@
                     <input type="text" name="client" class="form-control" value="{{ $project->client }}">
                 </div>
 
+
+              <select name="pm_id" class="form-control">
+    <option value="">-- Select PM --</option>
+    @foreach($pm as $user)
+        <option value="{{ $user->id }}" 
+            {{ $project->pm_id == $user->id ? 'selected' : '' }}>
+            {{ $user->name }}
+        </option>
+    @endforeach
+</select>
+
+
+
                 <div class="mb-3">
                     <label class="form-label">Start Date</label>
                     <input type="date" name="start_date" class="form-control" value="{{ $project->start_date }}">

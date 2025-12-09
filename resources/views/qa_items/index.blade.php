@@ -1,243 +1,278 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid px-4 mt-4">
-
-    {{-- FILTER --}}
-    <form method="GET" action="{{ route('qa_items.index', $sheet->id) }}" class="mb-3">
-        <div class="row g-2">
-
-            <div class="col-md-3">
-                <select name="status" class="form-select">
-                    <option value="">All Statuses</option>
-                    @foreach (\App\Models\QAItem::STATUSES as $s)
-                        <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
-                            {{ ucfirst(str_replace('_',' ', $s)) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <input type="text" name="assigned_to" value="{{ request('assigned_to') }}"
-                       class="form-control" placeholder="Search by assignee…">
-            </div>
-
-            <div class="col-md-3">
-                <select name="severity" class="form-select">
-                    <option value="">All Severities</option>
-                    @foreach (['critical','high','medium','low'] as $sev)
-                        <option value="{{ $sev }}" {{ request('severity') === $sev ? 'selected' : '' }}>
-                            {{ ucfirst($sev) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <button class="btn btn-secondary w-100">Filter</button>
-            </div>
-
-            @if(request()->hasAny(['status','assigned_to','severity']))
-                <div class="col-md-2">
-                    <a href="{{ route('qa_items.index', $sheet->id) }}"
-                       class="btn btn-outline-dark w-100">Reset</a>
-                </div>
-            @endif
-
-        </div>
-    </form>
-
-
-    {{-- HEADER --}}
+<div class="container-fluid px-4 py-3">
+    
+    {{-- PAGE HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">QA Items for Sheet: {{ $sheet->title }}</h1>
-
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('sheets.index',$sheet->id) }}">Sheets</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">QA Items</li>
+                </ol>
+            </nav>
+            <h1 class="h2 fw-bold mb-1">{{ $sheet->title }}</h1>
+            <p class="text-muted mb-0">Manage quality assurance items and track progress</p>
+        </div>
+        
         <div class="d-flex gap-2">
-
             @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer']))
-                <a href="{{ route('qa_items.create', $sheet->id) }}" class="btn btn-primary">+ Add QA Item</a>
-                <a href="{{ route('qa_items.importForm', $sheet->id) }}" class="btn btn-success">📥 Import</a>
+            <a href="{{ route('qa_items.create', $sheet->id) }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Add QA Item
+            </a>
             @endif
 
             @if(auth()->user()->hasRole(['PM','Senior Reviewer']))
-                <form action="{{ route('qa_items.verifyAll', $sheet->id) }}" method="POST" class="d-inline">
-                    @csrf
-                    <button class="btn btn-outline-success">✔ Verify All</button>
-                </form>
+            <form action="{{ route('qa_items.verifyAll', $sheet->id) }}" method="POST">
+                @csrf
+                <button class="btn btn-success">
+                    <i class="bi bi-check-all me-1"></i> Verify All
+                </button>
+            </form>
             @endif
-
         </div>
     </div>
 
-
-    {{-- FLASH --}}
-    @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
-    @if(session('error')) <div class="alert alert-danger">{{ session('error') }}</div> @endif
-
-
+    {{-- FILTER CARD --}}
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ route('qa_items.index', $sheet->id) }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">All Statuses</option>
+                            @foreach (\App\Models\QAItem::STATUSES as $s)
+                            <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
+                                {{ ucfirst(str_replace('_',' ', $s)) }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">Assignee</label>
+                        <input type="text" name="assigned_to" value="{{ request('assigned_to') }}"
+                               class="form-control form-control-sm" placeholder="Search assignee...">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">Severity</label>
+                        <select name="severity" class="form-select form-select-sm">
+                            <option value="">All Severities</option>
+                            @foreach (['critical','high','medium','low'] as $sev)
+                            <option value="{{ $sev }}" {{ request('severity') === $sev ? 'selected' : '' }}>
+                                {{ ucfirst($sev) }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-search me-1"></i> Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     {{-- TABLE --}}
     <div class="card shadow-sm border-0">
-        <div class="card-body">
-
-            <table class="table table-striped align-middle">
-                <thead class="table-dark">
-                <tr>
-
-                    <th>ID</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Due Date</th>
-                    <th>Assigned To</th>
-                    <th>Severity</th>
-                    <th>Progress</th>
-                    <th style="width: 350px;">Actions</th>
-                </tr>
-                </thead>
-
-                <tbody>
-
-                @forelse ($sheet->qaItems as $item)
-
-                    @php
-                        $badge = match($item->status) {
-                            'open'         => 'danger',
-                            'in_progress'  => 'warning',
-                            'needs_info'   => 'secondary',
-                            'resolved'     => 'success',
-                            'verified'     => 'primary',
-                            'closed'       => 'dark',
-                            default        => 'info'
-                        };
-
-                        $sevBadge = match($item->severity) {
-                            'critical' => 'danger',
-                            'high'     => 'warning',
-                            'medium'   => 'info',
-                            'low'      => 'secondary',
-                            default    => 'dark'
-                        };
-                    @endphp
-
-<tr id="item-{{ $item->id }}">
-
-                        <td>{{ $item->id }}</td>
-                        
-                        <td>{{ $item->item_description }}</td>
-
-                        <td><span class="badge bg-{{ $badge }}">{{ ucfirst(str_replace('_',' ', $item->status)) }}</span></td>
-
-                        <td>{{ $item->due_date ?? '—' }}</td>
-                        <td>{{ $item->assigned_to ?? '—' }}</td>
-
-                        <td><span class="badge bg-{{ $sevBadge }}">{{ ucfirst($item->severity) }}</span></td>
-
-                        <td>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-success"
-                                     style="width: {{ $item->completionPercentage() }}%"></div>
-                            </div>
-                            <small>{{ $item->completionPercentage() }}% completed</small>
-                        </td>
-
-
-                        {{-- ACTIONS --}}
-                        <td>
-
-                            {{-- Edit --}}
-                            @if(
-                                auth()->user()->hasRole(['Admin','PM','Senior Reviewer']) ||
-                                (auth()->user()->hasRole(['Engineer','Night Vision']) &&
-                                  $item->assigned_to == auth()->user()->name)
-                            )
-                                <a href="{{ route('qa_items.edit', [$sheet->id, $item->id]) }}"
-                                   class="btn btn-sm btn-warning">Edit</a>
-                            @endif
-
-                            {{-- Delete --}}
-                            @if(auth()->user()->hasRole(['Admin','PM']))
-                                <form action="{{ route('qa_items.destroy', [$sheet->id, $item->id]) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf @method('DELETE')
-                                    <button onclick="return confirm('Delete this item?')"
-                                            class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            @endif
-
-
-                            {{-- Start --}}
-                            @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer','Engineer','Night Vision']))
-                                <form action="{{ route('qa_items.updateStatus', $item->id) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="status" value="in_progress">
-                                    <button class="btn btn-sm btn-warning">Start</button>
-                                </form>
-                            @endif
-
-                            {{-- Resolve --}}
-                            @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer','Engineer','Night Vision']))
-                                <form action="{{ route('qa_items.updateStatus', $item->id) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="status" value="resolved">
-                                    <button class="btn btn-sm btn-success">Resolve</button>
-                                </form>
-                            @endif
-
-                            {{-- Verify --}}
-                            @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer']))
-                                <form action="{{ route('qa_items.updateStatus', $item->id) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="status" value="verified">
-                                    <button class="btn btn-sm btn-primary">Verify</button>
-                                </form>
-                            @endif
-
-                        </td>
-                    </tr>
-
-
-
-                    {{-- ADD REVIEW --}}
-                    @if(auth()->user()->hasRole(['PM','Senior Reviewer']))
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <td colspan="8">
-                                <form action="{{ route('qa_items.addReview', [$sheet->id, $item->id]) }}"
-                                      method="POST" class="p-3 bg-light border rounded">
-                                    @csrf
+                            <th>ID</th>
+                            <th class="ps-4">Title</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                                                      <th>Progress</th>
 
-                                    <div class="row g-2">
-                                        <div class="col-md-6">
-                                            <textarea name="comment" class="form-control" rows="2"
-                                                      placeholder="Add review…" required></textarea>
-                                        </div>
+                            <th>Due Date</th>
+                            <th>Assignee</th>
+                            <th>Severity</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
 
-                                        <div class="col-md-3">
-                                            <select name="status" class="form-select" required>
-                                                <option value="">-- Select Status --</option>
-                                                @foreach(['noted','open','resolved','verified','closed'] as $rs)
-                                                    <option value="{{ $rs }}">{{ ucfirst($rs) }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                    <tbody>
 
-                                        <div class="col-md-3">
-                                            <button class="btn btn-outline-primary w-100">💬 Add Review</button>
+                        @forelse ($items as $item)
+
+                        @php
+                            $badge = match($item->status) {
+                                'open'         => 'danger',
+                                'in_progress'  => 'warning',
+                                'needs_info'   => 'secondary',
+                                'resolved'     => 'success',
+                                'verified'     => 'primary',
+                                'closed'       => 'dark',
+                                default        => 'info'
+                            };
+
+                            $sevBadge = match($item->severity) {
+                                'critical' => 'danger',
+                                'high'     => 'warning',
+                                'medium'   => 'info',
+                                'low'      => 'secondary',
+                                default    => 'dark'
+                            };
+                        @endphp
+
+                        {{-- ITEM ROW --}}
+                        <tr id="item-{{ $item->id }}" class="align-middle">
+
+                        <td >{{ $item->id }}</td>
+                            <td class="ps-4">
+                                <strong>{{ $item->title }}</strong>
+                                <div class="text-muted small">{{ Str::limit($item->item_description, 60) }}</div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ $item->category }}</span>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-{{ $badge }}">{{ ucfirst(str_replace('_',' ', $item->status)) }}</span>
+                            </td>
+ <td style="min-width: 150px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="flex-grow-1">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-success"
+                                                 style="width: {{ $item->completionPercentage() }}%"></div>
                                         </div>
                                     </div>
+                                    <small class="text-muted">{{ $item->completionPercentage() }}%</small>
+                                </div>
+                                <div class="d-flex justify-content-between small mt-1">
+                                    <span class="{{ $item->applicable ? 'text-success' : 'text-muted' }}" title="Applicable">
+                                        <i class="bi bi-{{ $item->applicable ? 'check' : 'x' }}-circle"></i> App
+                                    </span>
+                                    <span class="{{ $item->incorporated ? 'text-success' : 'text-muted' }}" title="Incorporated">
+                                        <i class="bi bi-{{ $item->incorporated ? 'check' : 'x' }}-circle"></i> Inc
+                                    </span>
+                                    <span class="{{ $item->confirmed ? 'text-success' : 'text-muted' }}" title="Confirmed">
+                                        <i class="bi bi-{{ $item->confirmed ? 'check' : 'x' }}-circle"></i> Conf
+                                    </span>
+                                </div>
+                            </td>
 
+                            <td>{{ $item->project_due_date ?? '—' }}</td>
+
+                            <td>{{ $item->project_assigned_to ?? '—' }}</td>
+
+                            <td>
+                                <span class="badge bg-{{ $sevBadge }}">{{ ucfirst($item->severity) }}</span>
+                            </td>
+
+                         {{--   <td style="min-width:120px;">
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: {{ $item->completionPercentage() }}%"></div>
+                                </div>
+                                <small>{{ $item->completionPercentage() }}%</small>
+                            </td>
+                            --}}
+
+                            {{-- ACTIONS --}}
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1 flex-wrap">
+
+                                    {{-- Edit --}}
+                                    @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer']) ||
+                                      (auth()->user()->hasRole(['Engineer','Night Vision']) && $item->project_assigned_to == auth()->user()->name))
+                                    <a href="{{ route('qa_items.edit', [$sheet->id, $item->id]) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+                                    @endif
+
+                                    {{-- Delete --}}
+                                    @if(auth()->user()->hasRole(['Admin','PM']))
+                                    <form action="{{ route('qa_items.destroy', [$sheet->id, $item->id]) }}"
+                                          method="POST" onsubmit="return confirm('Delete item?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                    @endif
+
+                                    {{-- Start --}}
+                                    @if($item->status == 'open')
+                                    <form action="{{ route('qa_items.updateStatus', $item->id) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="status" value="in_progress">
+                                        <button class="btn btn-sm btn-outline-warning">Start</button>
+                                    </form>
+                                    @endif
+
+                                    {{-- Resolve --}}
+                                    @if(in_array($item->status, ['open','in_progress']))
+                                    <form action="{{ route('qa_items.updateStatus', $item->id) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="status" value="resolved">
+                                        <button class="btn btn-sm btn-outline-success">Resolve</button>
+                                    </form>
+                                    @endif
+
+                                    {{-- Verify --}}
+                                    @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer']) &&
+                                        in_array($item->status,['resolved','in_progress']))
+                                    <form action="{{ route('qa_items.updateStatus', $item->id) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="status" value="verified">
+                                        <button class="btn btn-sm btn-outline-info">Verify</button>
+                                    </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+
+                        {{-- ADD REVIEW (PM & SR) --}}
+                        @if(auth()->user()->hasRole(['PM','Senior Reviewer']))
+                        <tr class="bg-light">
+                            <td colspan="8" class="p-3">
+                                <form action="{{ route('qa_items.addReview', [$sheet->id, $item->id]) }}" method="POST">
+                                    @csrf
+                                    <div class="card border-0 shadow-sm p-3">
+
+                                        <h6 class="fw-bold mb-2">
+                                            <i class="bi bi-chat-left-text text-primary me-1"></i> Add Review
+                                        </h6>
+
+                                        <div class="row g-2">
+                                            <div class="col-md-7">
+                                                <textarea name="comment" class="form-control" rows="2" required
+                                                          placeholder="Write your comment…"></textarea>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <select name="status" class="form-select" required>
+                                                    <option value="">Select Status</option>
+                                                    @foreach(['noted','open','resolved','verified','closed'] as $rs)
+                                                    <option value="{{ $rs }}">{{ ucfirst($rs) }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <button class="btn btn-primary w-100">
+                                                    <i class="bi bi-send"></i> Submit
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
                                 </form>
                             </td>
                         </tr>
-                    @endif
+                        @endif
 
-
-
-                    {{-- REVIEW ROWS --}}
-                    @foreach($item->reviews as $review)
+                        {{-- REVIEWS LIST --}}
+                        @foreach($item->reviews as $review)
 
                         @php
                             $reviewBadge = match($review->status) {
@@ -251,103 +286,76 @@
                         @endphp
 
                         <tr>
-                            <td colspan="8">
-                                <div class="p-3 border rounded bg-white shadow-sm">
+                            <td colspan="8" class="p-3">
+                                <div class="card border shadow-sm p-3">
 
-                                    <div>
-                                        <strong>{{ $review->user->name }}</strong>
-                                        <span class="text-muted">({{ $review->role }})</span>
+                                    {{-- HEADER --}}
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ $review->user->name }}</strong>
+                                            <small class="text-muted">({{ $review->role }})</small>
 
-                                        <span class="badge bg-{{ $reviewBadge }} ms-2">
-                                            {{ ucfirst($review->status) }}
-                                        </span>
-
-                                        <div class="mt-1">{{ $review->comment }}</div>
-                                        <div class="text-muted small mt-1">
-                                            {{ $review->created_at->diffForHumans() }}
+                                            <span class="badge bg-{{ $reviewBadge }} ms-2">
+                                                {{ ucfirst($review->status) }}
+                                            </span>
                                         </div>
+                                        <span class="text-muted small">
+                                            <i class="bi bi-clock me-1"></i>{{ $review->created_at->diffForHumans() }}
+                                        </span>
                                     </div>
 
+                                    <div class="mt-2">{{ $review->comment }}</div>
 
-                                    {{-- PM CAN EDIT ANY REVIEW --}}
-                                    @if(auth()->user()->hasRole('PM'))
-                                        <div class="mt-3">
+                                    {{-- CONTROLS --}}
+                                    <div class="mt-3 d-flex gap-2">
 
-                                            <form action="{{ route('qa_items.updateReview', $review->id) }}"
-                                                  method="POST" class="d-inline">
-                                                @csrf
-                                                <input type="text" name="comment"
-                                                       value="{{ $review->comment }}"
-                                                       class="form-control mb-1" required>
+                                        {{-- PM can edit all --}}
+                                        @if(auth()->user()->hasRole('PM'))
+                                        <form action="{{ route('qa_items.updateReview', $review->id) }}" method="POST" class="d-flex gap-2">
+                                            @csrf
+                                            <input type="text" name="comment" class="form-control form-control-sm" value="{{ $review->comment }}">
+                                            <select name="status" class="form-select form-select-sm">
+                                                @foreach(['noted','open','resolved','verified','closed'] as $rs)
+                                                <option value="{{ $rs }}" {{ $review->status === $rs ? 'selected' : '' }}>
+                                                    {{ ucfirst($rs) }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                            <button class="btn btn-sm btn-success">Save</button>
+                                        </form>
 
-                                                <select name="status"
-                                                        class="form-select form-select-sm mb-1">
-                                                    @foreach(['noted','open','resolved','verified','closed'] as $rs)
-                                                        <option value="{{ $rs }}"
-                                                            {{ $review->status === $rs ? 'selected' : '' }}>
-                                                            {{ ucfirst($rs) }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                        <form action="{{ route('qa_items.deleteReview', $review->id) }}" method="POST"
+                                              onsubmit="return confirm('Delete?')">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                        @endif
 
-                                                <button class="btn btn-sm btn-outline-success">Save</button>
-                                            </form>
+                                        {{-- SR can edit only own --}}
+                                        @if(auth()->user()->hasRole('Senior Reviewer') && $review->user_id == auth()->id())
+                                        <form action="{{ route('qa_items.updateReview', $review->id) }}" method="POST" class="d-flex gap-2">
+                                            @csrf
+                                            <input type="text" name="comment" class="form-control form-control-sm" value="{{ $review->comment }}">
+                                            <select name="status" class="form-select form-select-sm">
+                                                @foreach(['noted','open','resolved','verified','closed'] as $rs)
+                                                <option value="{{ $rs }}" {{ $review->status === $rs ? 'selected' : '' }}>
+                                                    {{ ucfirst($rs) }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                            <button class="btn btn-sm btn-success">Save</button>
+                                        </form>
+                                        @endif
 
-                                            <form action="{{ route('qa_items.deleteReview', $review->id) }}"
-                                                  method="POST" class="d-inline">
-                                                @csrf @method('DELETE')
-                                                <button onclick="return confirm('Delete this review?')"
-                                                        class="btn btn-sm btn-outline-danger">Delete</button>
-                                            </form>
-
-                                        </div>
-                                    @endif
-
-
-                                    {{-- Senior Reviewer can edit ONLY own --}}
-                                    @if(auth()->user()->hasRole('Senior Reviewer') &&
-                                        $review->user_id == auth()->id())
-
-                                        <div class="mt-3">
-
-                                            <form action="{{ route('qa_items.updateReview', $review->id) }}"
-                                                  method="POST" class="d-inline">
-                                                @csrf
-                                                <input type="text" name="comment"
-                                                       value="{{ $review->comment }}"
-                                                       class="form-control mb-1" required>
-
-                                                <select name="status"
-                                                        class="form-select form-select-sm mb-1">
-                                                    @foreach(['noted','open','resolved','verified','closed'] as $rs)
-                                                        <option value="{{ $rs }}"
-                                                            {{ $review->status === $rs ? 'selected' : '' }}>
-                                                            {{ ucfirst($rs) }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-
-                                                <button class="btn btn-sm btn-outline-success">Save</button>
-                                            </form>
-
-                                            <form action="{{ route('qa_items.deleteReview', $review->id) }}"
-                                                  method="POST" class="d-inline">
-                                                @csrf @method('DELETE')
-                                                <button onclick="return confirm('Delete this review?')"
-                                                        class="btn btn-sm btn-outline-danger">Delete</button>
-                                            </form>
-
-                                        </div>
-
-                                    @endif
+                                    </div>
 
                                 </div>
                             </td>
                         </tr>
+                        @endforeach
 
-                    @endforeach
-
-
+                        {{-- ATTACHMENTS SECTION WOULD GO HERE IF YOU WANT IT --}}
+                        
 
                     {{-- ATTACHMENTS --}}
                     <tr>
@@ -441,45 +449,19 @@
                             </div>
                         </td>
                     </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                No QA items found.
+                            </td>
+                        </tr>
+                        @endforelse
 
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-3">No QA items found.</td>
-                    </tr>
-                @endforelse
-
-                </tbody>
-            </table>
-
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
 </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    // Check if URL contains #item-XYZ
-    const hash = window.location.hash;
-
-    if (hash && hash.startsWith("#item-")) {
-        const row = document.querySelector(hash);
-
-        if (row) {
-            // Scroll to it smoothly
-            row.scrollIntoView({ behavior: "smooth", block: "center" });
-
-            // Highlight Animation
-            row.style.transition = "background-color 1s ease";
-            row.style.backgroundColor = "#fff3cd"; // light yellow
-
-            setTimeout(() => {
-                row.style.backgroundColor = "";
-            }, 2000);
-        }
-    }
-
-});
-</script>
 
 @endsection

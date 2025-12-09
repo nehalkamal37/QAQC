@@ -11,11 +11,15 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+
+    
+
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Client</th>
+                <th>PM</th>
                 <th>Status</th>
                 <th>Due Date</th>
                 <th>Progress</th>
@@ -27,6 +31,7 @@
             <tr>
                 <td>{{ $project->name }}</td>
                 <td>{{ $project->client }}</td>
+                <td>{{ $project->pm ? $project->pm->name : 'N/A' }}</td>
                 <td>{{ ucfirst($project->status) }}</td>
                 <td>{{ $project->due_date }}</td>
                 <td>

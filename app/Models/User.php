@@ -6,6 +6,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\QaItem;
+use App\Models\Role;
+use App\Models\Project;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -84,4 +88,57 @@ public function qaItemsAssigned()
 }
 
 
+
+
+    // Add this to your existing User model
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
+    public function activeAssignments(): HasMany
+    {
+        return $this->assignments()->active();
+    }
+
+    // Helper methods for role checking
+    public function isAssignedToProject($projectId): bool
+    {
+        return $this->activeAssignments()->where('project_id', $projectId)->exists();
+    }
+
+    public function getProjectRole($projectId): ?string
+    {
+        $assignment = $this->activeAssignments()
+            ->where('project_id', $projectId)
+            ->first();
+
+        return $assignment ? $assignment->role : null;
+    }
+
+    public function getAssignedProjects()
+    {
+        return Project::whereHas('assignments', function ($query) {
+            $query->where('user_id', $this->id)->active();
+        })->get();
+    }
+
+    public function assignedTo(Project $project): bool
+    {
+        return $this->activeAssignments()
+            ->where('project_id', $project->id)
+            ->exists();
+    }
+
+    // app/Models/User.php
+// Change from 'notifications' to 'userNotifications'
+public function userNotifications()
+{
+    return $this->hasMany(\App\Models\Notification::class);
+}
+
+public function unreadUserNotifications()
+{
+    return $this->userNotifications()->where('is_read', false);
+}
 }

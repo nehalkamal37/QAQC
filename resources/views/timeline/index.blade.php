@@ -3,434 +3,267 @@
 @section('content')
 <div class="container-fluid px-4 py-4 timeline-container">
 
-    <!-- Page Header -->
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 fw-bold mb-1 text-dark">Activity Timeline</h1>
-            <p class="text-muted mb-0">Track all project activities and changes</p>
+            <p class="text-muted mb-0">Track all project updates, assignments and QA changes</p>
         </div>
-        <div class="timeline-stats">
-            <span class="badge bg-light text-dark">
-                <i class="fas fa-history me-1"></i>
-                {{ $logs->total() }} total activities
-            </span>
-        </div>
+        <span class="badge bg-light text-dark">
+            <i class="fas fa-history me-1"></i> {{ $logs->total() }} activities
+        </span>
     </div>
 
-    <!-- Enhanced Filters Card -->
+    <!-- FILTER CARD -->
     <div class="card filter-card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('timeline.index') }}">
+
                 <div class="row g-3 align-items-end">
-                    
-                <!-- Item ID Filter -->
-<div class="col-md-2">
-    <label class="form-label fw-semibold small text-muted mb-1">Item ID</label>
-    <div class="input-group input-group-sm">
-        <span class="input-group-text bg-light border-end-0">
-            <i class="fas fa-hashtag text-muted"></i>
-        </span>
-        <input type="number" name="item_id" 
-               class="form-control border-start-0"
-               value="{{ request('item_id') }}"
-               placeholder="e.g. 125">
-    </div>
-</div>
 
-                    <!-- User Filter -->
+                    <!-- Item ID -->
                     <div class="col-md-2">
-                        <label class="form-label fw-semibold small text-muted mb-1">User</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="fas fa-user text-muted"></i>
-                            </span>
-                            <select name="user" class="form-select border-start-0">
-                                <option value="">All Users</option>
-                                @foreach(\App\Models\User::orderBy('name')->get() as $u)
-                                    <option value="{{ $u->id }}" @selected(request('user') == $u->id)>
-                                        {{ $u->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted">Item ID</label>
+                        <input type="number" name="item_id"
+                               class="form-control form-control-sm"
+                               value="{{ request('item_id') }}"
+                               placeholder="e.g. 521">
                     </div>
 
-                    <!-- Action Type Filter -->
+                    <!-- User -->
                     <div class="col-md-2">
-                        <label class="form-label fw-semibold small text-muted mb-1">Action Type</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="fas fa-play-circle text-muted"></i>
-                            </span>
-                            <select name="action" class="form-select border-start-0">
-                                <option value="">All Actions</option>
-                                @foreach(['status_change','review_added','attachment_uploaded','item_imported'] as $act)
-                                    <option value="{{ $act }}" @selected(request('action') == $act)>
-                                        {{ ucfirst(str_replace('_',' ',$act)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted">User</label>
+                        <select name="user" class="form-select form-select-sm">
+                            <option value="">All Users</option>
+                            @foreach(\App\Models\User::orderBy('name')->get() as $u)
+                                <option value="{{ $u->id }}" @selected(request('user') == $u->id)>
+                                    {{ $u->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
-                    <!-- Project Filter -->
+                    <!-- Action Type -->
                     <div class="col-md-2">
-                        <label class="form-label fw-semibold small text-muted mb-1">Project</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="fas fa-folder text-muted"></i>
-                            </span>
-                            <select name="project" class="form-select border-start-0">
-                                <option value="">All Projects</option>
-                                @foreach(\App\Models\Project::orderBy('name')->get() as $p)
-                                    <option value="{{ $p->id }}" @selected(request('project') == $p->id)>
-                                        {{ $p->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted">Action Type</label>
+                        <select name="action" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            @foreach([
+                                'status_change',
+                                'review_added',
+                                'attachment_uploaded',
+                                'item_imported',
+                                'qa_assignment',
+                                'due_date_changed',
+                                'applicable_changed',
+                                'incorporated_changed',
+                                'confirmed_changed'
+                              ] as $act)
+                                <option value="{{ $act }}" @selected(request('action') == $act)>
+                                    {{ ucfirst(str_replace('_',' ', $act)) }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
-                    <!-- Severity Filter -->
+                    <!-- Assigned To -->
                     <div class="col-md-2">
-                        <label class="form-label fw-semibold small text-muted mb-1">Severity</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="fas fa-exclamation-triangle text-muted"></i>
-                            </span>
-                            <select name="severity" class="form-select border-start-0">
-                                <option value="">All Severities</option>
-                                @foreach(['critical','high','medium','low'] as $sev)
-                                    <option value="{{ $sev }}" @selected(request('severity') == $sev)>
-                                        {{ ucfirst($sev) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted">Assigned To</label>
+                        <select name="assigned_to" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            @foreach(\App\Models\User::orderBy('name')->get() as $u)
+                                <option value="{{ $u->id }}" @selected(request('assigned_to') == $u->id)>
+                                    {{ $u->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
-                    <!-- Search -->
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold small text-muted mb-1">Search</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="fas fa-search text-muted"></i>
-                            </span>
-                            <input type="text" name="search" class="form-control border-start-0"
-                                   value="{{ request('search') }}" placeholder="Search notes or changes...">
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
+                    <!-- Applicable -->
                     <div class="col-md-1">
-                        <button type="submit" class="btn btn-primary btn-sm w-100">
-                            <i class="fas fa-filter me-1"></i>Filter
-                        </button>
+                        <label class="form-label small text-muted">Applicable</label>
+                        <select name="applicable" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            <option value="1" @selected(request('applicable')==='1')>Yes</option>
+                            <option value="0" @selected(request('applicable')==='0')>No</option>
+                        </select>
+                    </div>
+
+                    <!-- Incorporated -->
+                    <div class="col-md-1">
+                        <label class="form-label small text-muted">Inc.</label>
+                        <select name="incorporated" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            <option value="1" @selected(request('incorporated')==='1')>Yes</option>
+                            <option value="0" @selected(request('incorporated')==='0')>No</option>
+                        </select>
+                    </div>
+
+                    <!-- Confirmed -->
+                    <div class="col-md-1">
+                        <label class="form-label small text-muted">Conf.</label>
+                        <select name="confirmed" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            <option value="1" @selected(request('confirmed')==='1')>Yes</option>
+                            <option value="0" @selected(request('confirmed')==='0')>No</option>
+                        </select>
+                    </div>
+
+                    <!-- DUE DATE -->
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Due From</label>
+                        <input type="date" name="due_from"
+                               class="form-control form-control-sm"
+                               value="{{ request('due_from') }}">
                     </div>
 
                     <div class="col-md-2">
-                        <a href="{{ route('timeline.index') }}" class="btn btn-outline-secondary btn-sm w-100">
-                            <i class="fas fa-times me-1"></i>Clear
-                        </a>
+                        <label class="form-label small text-muted">Due To</label>
+                        <input type="date" name="due_to"
+                               class="form-control form-control-sm"
+                               value="{{ request('due_to') }}">
                     </div>
-                </div>
+
+                    <!-- Global Search -->
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Search</label>
+                        <input type="text" name="search"
+                               class="form-control form-control-sm"
+                               value="{{ request('search') }}"
+                               placeholder="Search notes, changes, description...">
+                    </div>
+
+                    <!-- Apply / Reset -->
+                    <div class="col-md-1">
+                        <button class="btn btn-primary btn-sm w-100">Filter</button>
+                    </div>
+
+                    <div class="col-md-2">
+                        <a href="{{ route('timeline.index') }}"
+                           class="btn btn-outline-secondary btn-sm w-100">Clear</a>
+                    </div>
+
+                </div> <!-- row -->
+
             </form>
         </div>
     </div>
 
-    <!-- Timeline Activity Card -->
+    <!-- TIMELINE ITEMS -->
     <div class="card timeline-card">
-        <div class="card-header bg-white border-bottom-0 py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0">Recent Activities</h5>
-                <div class="timeline-actions">
-                    <button class="btn btn-sm btn-outline-secondary" id="expandAll">
-                        <i class="fas fa-expand me-1"></i>Expand All
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" id="collapseAll">
-                        <i class="fas fa-compress me-1"></i>Collapse All
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <div class="card-body p-0">
-          @forelse ($logs as $log)
-    @php
-        $old = is_array($log->old_value) ? $log->old_value : ($log->old_value ?? []);
-        $new = is_array($log->new_value) ? $log->new_value : ($log->new_value ?? []);
 
-        $changes = [];
-        if ($new) {
-            foreach ($new as $field => $value) {
-                if (in_array($field, ['path', 'mime', 'filename'])) continue;
-                $oldVal = $old[$field] ?? null;
+            @foreach($logs as $log)
+                @php
+                    $changes = $log->extractChanges(); 
+                    // new helper from logger
+                @endphp
 
-                if ($oldVal !== $value) {
-                    $changes[] = [
-                        'field' => $field,
-                        'from'  => $oldVal,
-                        'to'    => $value,
-                    ];
-                }
-            }
-        }
+                <div class="timeline-item">
 
-        // Icons + Colors for action types
-        $actionConfig = [
-            'status_change'       => ['icon' => 'fas fa-sync',            'color' => 'primary'],
-            'review_added'        => ['icon' => 'fas fa-clipboard-check', 'color' => 'success'],
-            'attachment_uploaded' => ['icon' => 'fas fa-paperclip',       'color' => 'warning'],
-            'item_imported'       => ['icon' => 'fas fa-file-import',     'color' => 'info'],
-        ];
-
-        $actionIcon  = $actionConfig[$log->action_type]['icon']  ?? 'fas fa-circle';
-        $actionColor = $actionConfig[$log->action_type]['color'] ?? 'secondary';
-    @endphp
-
-    <div class="timeline-item">
-        <div class="timeline-marker">
-            <div class="marker-icon bg-{{ $actionColor }}">
-                <i class="{{ $actionIcon }}"></i>
-            </div>
-            <div class="timeline-line"></div>
-        </div>
-
-        <div class="timeline-content">
-
-            <!-- HEADER -->
-            <div class="timeline-header">
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            {{ substr($log->user->name ?? 'S', 0, 1) }}
+                    <!-- MARKER -->
+                    <div class="timeline-marker">
+                        <div class="marker-icon bg-{{ $log->color() }}">
+                            <i class="{{ $log->icon() }}"></i>
                         </div>
-                        <div class="user-details">
-                            <strong class="user-name">{{ $log->user->name ?? 'System' }}</strong>
-                            <span class="action-badge badge bg-{{ $actionColor }}">
-                                {{ ucfirst(str_replace('_',' ', $log->action_type)) }}
-                            </span>
-                        </div>
+                        <div class="timeline-line"></div>
                     </div>
 
-                    <div class="timeline-time text-end">
-                        <div class="time-date">{{ $log->created_at->format('M j, Y') }}</div>
-                        <div class="time-hour text-muted">{{ $log->created_at->format('h:i A') }}</div>
-                        <div class="time-ago text-muted small">{{ $log->created_at->diffForHumans() }}</div>
+                    <!-- CONTENT -->
+                    <div class="timeline-content">
 
-                        <!-- Delete Button -->
-                        <button class="btn btn-sm btn-outline-danger mt-2"
-                                data-bs-toggle="modal"
-                                data-bs-target="#deleteLogModal{{ $log->id }}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- DELETE MODAL -->
-      <!--
-            <div class="modal fade" id="deleteLogModal{{ $log->id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-
-                        <div class="modal-header">
-                            <h5 class="modal-title text-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i> Delete Activity
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-
-                        <div class="modal-body">
-                            Are you sure you want to delete this activity?
-                            <br>
-                            <small class="text-muted">This action cannot be undone.</small>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <form action="{{ route('timeline.destroy', $log->id) }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </form>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-    -->
-
-            <!-- BODY -->
-            <div class="timeline-body">
-
-                <!-- Context Info -->
-                <div class="context-section mb-3">
-                    <div class="context-items">
-
-                        @if($log->project)
-                            <div class="context-item">
-                                <i class="fas fa-folder text-primary me-2"></i>
-                                <strong>Project:</strong> {{ $log->project->name }}
-                            </div>
-                        @endif
-
-                        @if($log->phase)
-                            <div class="context-item">
-                                <i class="fas fa-layer-group text-success me-2"></i>
-                                <strong>Phase:</strong> {{ $log->phase->type }}
-                            </div>
-                        @endif
-
-                        @if($log->sheet)
-                            <div class="context-item">
-                                <i class="fas fa-file-alt text-warning me-2"></i>
-                                <strong>Sheet:</strong>
-                                {{ $log->sheet->number }} — {{ $log->sheet->title }}
-                            </div>
-                        @endif
-
-                        @if($log->qa_item_id && $log->sheet_id)
-                            <div class="context-item">
-                                <i class="fas fa-clipboard-check text-danger me-2"></i>
-                                <strong>QA Item:</strong>
-                                <a href="{{ route('qa_items.index', ['sheetId' => $log->sheet_id]) }}#item-{{ $log->qa_item_id }}"
-                                   class="qa-item-link">
-                                    #{{ $log->qa_item_id }}
-                                </a>
-                            </div>
-                        @endif
-
-                    </div>
-                </div>
-
-
-                <!-- Note -->
-                @if($log->note)
-                    <div class="note-card">
-                        <i class="fas fa-sticky-note text-muted me-2"></i>
-                        <strong>Note:</strong> {{ $log->note }}
-                    </div>
-                @endif
-
-
-                <!-- Attachments -->
-                @if($log->action_type === 'attachment_uploaded' && isset($log->new_value['path']))
-                    @php
-                        $mime = $log->new_value['mime'] ?? '';
-                        $path = asset('storage/'.$log->new_value['path']);
-                    @endphp
-
-                    <div class="attachment-preview mt-2">
-
-                        @if(str_contains($mime, 'image'))
-                            <img src="{{ $path }}" class="attachment-image"
-                                 data-bs-toggle="modal"
-                                 data-bs-target="#imgModal{{ $log->id }}">
-
-                            <!-- Image Modal -->
-                            <div class="modal fade" id="imgModal{{ $log->id }}" tabindex="-1">
-                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-body p-0">
-                                            <img src="{{ $path }}" class="w-100 rounded">
-                                        </div>
-                                    </div>
+                        <!-- HEADER -->
+                        <div class="timeline-header d-flex justify-content-between">
+                            <div class="user-info">
+                                <div class="user-avatar">{{ substr($log->user->name ?? 'S',0,1) }}</div>
+                                <div>
+                                    <strong>{{ $log->user->name ?? 'System' }}</strong>
+                                    <span class="badge bg-{{ $log->color() }} ms-1">
+                                        {{ ucfirst(str_replace('_',' ',$log->action_type)) }}
+                                    </span>
                                 </div>
                             </div>
 
-                        @elseif(str_contains($mime, 'pdf'))
-
-                            <button class="btn btn-outline-primary btn-sm attachment-btn"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#pdfModal{{ $log->id }}">
-                                <i class="fas fa-file-pdf me-1"></i>View PDF
-                            </button>
-
-                            <!-- PDF Modal -->
-                            <div class="modal fade" id="pdfModal{{ $log->id }}" tabindex="-1">
-                                <div class="modal-dialog modal-xl">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">{{ $log->note }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body p-0">
-                                            <iframe src="{{ $path }}" style="width:100%; height:85vh; border:0;"></iframe>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="timeline-time text-end">
+                                <div>{{ $log->created_at->format('M j, Y') }}</div>
+                                <small class="text-muted">{{ $log->created_at->diffForHumans() }}</small>
                             </div>
+                        </div>
 
-                        @else
-                            <a href="{{ $path }}" target="_blank"
-                               class="btn btn-sm btn-outline-secondary attachment-btn">
-                                <i class="fas fa-download me-1"></i>Download File
-                            </a>
+                        <!-- CONTEXT -->
+                        <div class="context-items mt-2">
+
+                            @if($log->project)
+                                <div class="context-item">
+                                    <i class="fas fa-folder text-primary me-1"></i>
+                                    Project: {{ $log->project->name }}
+                                </div>
+                            @endif
+
+                            @if($log->sheet)
+                                <div class="context-item">
+                                    <i class="fas fa-file-alt text-warning me-1"></i>
+                                    Sheet: {{ $log->sheet->number }}
+                                </div>
+                            @endif
+
+                            @if($log->qa_item_id)
+                                <div class="context-item">
+                                    <i class="fas fa-clipboard-check text-danger me-1"></i>
+                                    <a href="{{ route('qa_items.index', $log->sheet_id) }}#item-{{ $log->qa_item_id }}"
+                                       class="qa-item-link">
+                                        QA Item #{{ $log->qa_item_id }}
+                                    </a>
+                                </div>
+                            @endif
+
+                        </div>
+
+                        <!-- NOTE -->
+                        @if($log->note)
+                            <div class="note-card mt-2">
+                                <i class="fas fa-sticky-note me-1 text-muted"></i>
+                                {{ $log->note }}
+                            </div>
+                        @endif
+
+                        <!-- CHANGES -->
+                        @if(count($changes))
+                            <div class="changes-list mt-3">
+
+                                <h6 class="changes-title">
+                                    <i class="fas fa-exchange-alt me-1"></i>
+                                    Changes Made
+                                </h6>
+
+                                <div class="changes-grid">
+                                    @foreach($changes as $c)
+                                        <div class="change-item">
+                                            <span class="change-field">{{ $c['field'] }}</span>
+                                            <span class="from-value">{{ $c['from'] }}</span>
+                                            <i class="fas fa-arrow-right text-muted"></i>
+                                            <span class="to-value text-success">{{ $c['to'] }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                            </div>
                         @endif
 
                     </div>
-                @endif
 
-
-                <!-- Field Changes -->
-                @if(count($changes))
-                    <div class="changes-list mt-3">
-                        <h6 class="changes-title">
-                            <i class="fas fa-exchange-alt me-2"></i>Changes Made
-                        </h6>
-
-                        <div class="changes-grid">
-                            @foreach($changes as $ch)
-                                <div class="change-item">
-                                    <span class="change-field">{{ ucfirst(str_replace('_', ' ', $ch['field'])) }}</span>
-
-                                    <div class="change-arrow">
-                                        <span class="from-value">{{ $ch['from'] ?? '—' }}</span>
-                                        <i class="fas fa-arrow-right mx-2 text-muted"></i>
-                                        <span class="to-value">{{ $ch['to'] ?? '—' }}</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                    </div>
-                @endif
-
-            </div>
+                </div>
+            @endforeach
 
         </div>
     </div>
 
-@empty
-    <div class="empty-state text-center py-5">
-        <div class="empty-icon mb-3">
-            <i class="fas fa-history fa-3x text-muted"></i>
-        </div>
-        <h5 class="text-muted">No activity recorded yet</h5>
-        <p class="text-muted">Activities will appear here as they happen</p>
-    </div>
-@endforelse
+    {{ $logs->links() }}
+
 </div>
 
-<!-- Pagination -->
-@if($logs->hasPages())
-    <div class="card-footer bg-white border-top-0 py-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="text-muted small">
-                Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{ $logs->total() }} results
-            </div>
-            <div class="timeline-pagination">
-                {{ $logs->links() }}
-            </div>
-        </div>
-    </div>
-@endif
-</div>
-</div>
+
+
 
 
 <!-- Custom CSS -->

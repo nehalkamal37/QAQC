@@ -4,6 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Project;
+use App\Models\Sheet;
+use App\Models\ProjectQAItemStatus;
+use App\Models\QaItemReview;
+use App\Models\Phase;
+use App\Models\User;
+use App\Models\Attachment;
 
 class QAItem extends Model
 {
@@ -14,7 +21,11 @@ class QAItem extends Model
   
     protected $fillable = [
     'sheet_id', 'item_description', 'category', 'type', 'notes',
-    'assigned_to', 'due_date', 'status', 'severity'
+    'assigned_to', 'due_date', 'status', 
+    'comments',
+    'severity',
+    'checkbox_values'
+
 ];
 
 public const STATUSES = [
@@ -37,6 +48,24 @@ public static function isValidStatus($status)
         'closed'
     ]);
 }
+
+   
+    public function projectStatuses()
+    {
+        return $this->hasOne(ProjectQAItemStatus::class);
+    }
+
+    /**
+     * QA Item is assigned to many projects.
+     */
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_qa_item_statuses')
+                    ->withPivot('applicable', 'incorporated', 'confirmed', 'comments', 'due_date', 'assigned_to')
+                    ->withTimestamps();
+    }
+
+    
 
     public function sheet()
     {
@@ -87,5 +116,86 @@ public function attachments()
 {
     return $this->morphMany(Attachment::class, 'attachable');
 }
+
+
+
+
+    // Option 1: Using $dates (Laravel 7 and below)
+    protected $dates = ['due_date'];
+
+    // Option 2: Using $casts (Laravel 8 and above - RECOMMENDED)
+    protected $casts = [
+        'due_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    'checkbox_values' => 'array',
+
+    ];
+
+    // Add this method to check if due date is past
+    public function isOverdue()
+    {
+        return $this->due_date && $this->due_date->isPast();
+    }
+
+    // Status color method
+    public function getStatusColor()
+    {
+        return match($this->status) {
+            'open' => 'warning',
+            'in_progress' => 'info',
+            'resolved' => 'success',
+            'verified' => 'primary',
+            'closed' => 'secondary',
+            default => 'dark',
+        };
+    }
+
+
+    
+
+    public function assignedUser()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    // If you have a direct phase relationship
+    public function phase()
+    {
+        return $this->belongsTo(Phase::class);
+    }
+
+ // Helper to check if assigned to current user
+    public function isAssignedToMe()
+    {
+        return $this->assigned_to === auth()->id();
+    }
+
+    public function getStatusIcon()
+    {
+        return match($this->status) {
+            'open' => 'fas fa-exclamation-circle',
+            'in_progress' => 'fas fa-spinner',
+            'needs_info' => 'fas fa-info-circle',
+            'resolved' => 'fas fa-check-circle',
+            'verified' => 'fas fa-thumbs-up',
+            'closed' => 'fas fa-lock',
+            default => 'fas fa-question-circle',
+        };
+    }
+
+
+
+public function projectStatus()
+{
+    return $this->hasOne(ProjectQAItemStatus::class, 'qa_item_id');
+}
+
+public function assigneeUser()
+{
+    return $this->belongsTo(User::class, 'assigned_to');
+}
+
+
 
 }
