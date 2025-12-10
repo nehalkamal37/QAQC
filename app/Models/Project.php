@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Phase;
 use App\Models\Sheet;
-use App\Models\QaItem;
+use App\Models\QAItem;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 use App\Models\Assignment;
 use App\Models\User;
