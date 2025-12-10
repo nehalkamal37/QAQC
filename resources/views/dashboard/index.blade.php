@@ -842,7 +842,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             data.severity_overdue?.low ?? 0,
                         ],
                         backgroundColor: [
-                            '#dc2626',
+                            '#ece3e3ff',
                             '#ea580c',
                             '#f59e0b',
                             '#16a34a'
