@@ -6,7 +6,7 @@ use App\Models\Sheet;
 use App\Models\Phase;
 use Illuminate\Http\Request;
 use App\Models\QaMasterItem;
-use App\Models\QaItem;
+use App\Models\QAItem;
 
 class SheetController extends Controller
 {

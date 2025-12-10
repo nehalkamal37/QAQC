@@ -47,7 +47,7 @@ class ProjectQAItemStatus extends Model
 
     public function qaItem()
     {
-        return $this->belongsTo(QaItem::class, 'qa_item_id');
+        return $this->belongsTo(QAItem::class, 'qa_item_id');
     }
 
   
