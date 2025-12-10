@@ -20,7 +20,7 @@
     <!-- HEADER + FILTER -->
     <div class="section-header d-flex justify-content-between align-items-center">
         <div>
-            <h5 class="fw-bold mb-0">📌 Project QA Progress</h5>
+            <h5 class="fw-bold mb-0"> Project QA Progress</h5>
             <span class="text-muted small">Visual progress across projects, phases & sheets</span>
         </div>
 
@@ -47,7 +47,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div>
-            <h5 class="fw-bold mb-0">📉 Phase Burn-Down Chart</h5>
+            <h5 class="fw-bold mb-0"> Phase Burn-Down Chart</h5>
             <small class="text-muted">Remaining QA items per day — toward Signoff</small>
         </div>
 
@@ -245,7 +245,7 @@
     <div class="col-lg-5">
         <div class="card shadow-sm h-100">
             <div class="card-header">
-                <h5 class="fw-bold mb-0">⏱️ SLA & Overdue Analytics</h5>
+                <h5 class="fw-bold mb-0">⏱ SLA & Overdue Analytics</h5>
                 <small class="text-muted">Age of active QA items vs SLA target</small>
             </div>
 
@@ -270,7 +270,7 @@
 
                 <hr>
                 <small class="text-muted d-block mt-2">
-    <strong>📌 What this chart means:</strong><br>
+    <strong> What this chart means:</strong><br>
     • <strong>X-Axis</strong> (horizontal): age groups = how many days each QA item has been open  
       (calculated as: <code>today − created_at</code>).<br>
     • <strong>Y-Axis</strong> (vertical): number of active QA items inside each age group.<br>
@@ -582,7 +582,7 @@
         <div class="col-lg-6">
             <div class="section-card">
                 <div class="section-header">
-                    <h5 class="fw-bold mb-0">📈 Status Overview</h5>
+                    <h5 class="fw-bold mb-0"> Status Overview</h5>
                     <span class="text-muted small">Current QA item status</span>
                 </div>
                 <div class="row g-3 mt-2">
@@ -630,7 +630,7 @@
         <div class="col-lg-6">
             <div class="section-card">
                 <div class="section-header">
-                    <h5 class="fw-bold mb-0">⚠️ Severity Levels</h5>
+                    <h5 class="fw-bold mb-0"> Severity Levels</h5>
                     <span class="text-muted small">Show QA items reviews by severity</span>
                 </div>
                 <div class="row g-3 mt-2">
