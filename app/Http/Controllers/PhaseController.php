@@ -37,6 +37,16 @@ class PhaseController extends Controller
 
         return redirect()->route('phases.index', $projectId)->with('success', 'Phase added successfully!');
     }
+ public function show($id)
+{
+    $phase = Phase::with([
+        'project',
+        'sheets',
+        'assignedUser'
+    ])->findOrFail($id);
+
+    return view('phases.show', compact('phase'));
+}
 
     public function edit($id)
     {

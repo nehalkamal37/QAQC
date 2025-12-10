@@ -17,58 +17,99 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-   public function index()
+  public function index()
 {
-    // Summary Data
-    $data = [
-        'projects_count' => Project::count(),
-        'phases_count' => Phase::count(),
-        'sheets_count' => Sheet::count(),
-        'qa_items_count' => QaItem::count(),
+    // Load status table
+  $statusCounts = $this->getDerivedStatusCounts();
 
-        'qa_open'     => QaItem::where('status', 'open')->count(),
-        'qa_pending'  => QaItem::where('status', 'pending')->count(),
-        'qa_resolved' => QaItem::where('status', 'resolved')->count(),
-        'qa_closed'   => QaItem::where('status', 'closed')->count(),
+$data = [
+    'projects_count' => Project::count(),
+    'phases_count'   => Phase::count(),
+    'sheets_count'   => Sheet::count(),
+    'qa_items_count' => QaItem::count(),
 
-        'qa_critical' => QaItem::where('severity', 'critical')->count(),
-        'qa_high'     => QaItem::where('severity', 'high')->count(),
-        'qa_medium'   => QaItem::where('severity', 'medium')->count(),
-        'qa_low'      => QaItem::where('severity', 'low')->count(),
+    // Derived status counts
+    'qa_open'        => $statusCounts['open'],
+    'qa_pending'     => $statusCounts['in_progress'],
+    'qa_needs_info'  => $statusCounts['needs_info'],
+    'qa_resolved'    => $statusCounts['resolved'],
+    'qa_verified'    => $statusCounts['verified'],
+    'qa_closed'      => $statusCounts['closed'],
 
-        'reviewer_load' => User::withCount('qaItemsAssigned')
-            ->having('qa_items_assigned_count', '>', 0)
-            ->orderBy('qa_items_assigned_count', 'desc')
-            ->take(5)
-            ->get()
-    ];
+    // A/I/C
+    'qa_applicable'   => ProjectQaItemStatus::where('applicable', 1)->count(),
+    'qa_incorporated' => ProjectQaItemStatus::where('incorporated', 1)->count(),
+    'qa_confirmed'    => ProjectQaItemStatus::where('confirmed', 1)->count(),
 
-    // Optimized Project Loading
-/*
-$projects = Project::withCount(['phases', 'sheets', 'qaItems'])
-    ->with([
-        'phases:id,project_id,name',
-        'sheets:id,phase_id,sheet_number,title',
-        'qaItems:id,sheet_id,item_number'
-    ])
-    ->get(['id', 'name', 'description']);
-*/
-$projects = Project::withCount(['phases', 'sheets', 'qaItems'])
-    ->with(['phases', 'sheets'])
-    ->get();
+    // Severity
+    'qa_critical' => QaItem::where('severity', 'critical')->count(),
+    'qa_high'     => QaItem::where('severity', 'high')->count(),
+    'qa_medium'   => QaItem::where('severity', 'medium')->count(),
+    'qa_low'      => QaItem::where('severity', 'low')->count(),
+
+    'reviewer_load' => User::withCount('qaItemsAssigned')
+        ->having('qa_items_assigned_count', '>', 0)
+        ->orderBy('qa_items_assigned_count', 'desc')
+        ->take(5)
+        ->get(),
+];
+
+
+    // Load projects summary
+    $projects = Project::withCount(['phases', 'sheets', 'qaItems'])
+        ->with(['phases', 'sheets'])
+        ->get();
 
     $data['project_progress'] = $this->getProjectProgress();
-$latestProject = Project::latest('id')->first();
 
-return view('dashboard.index', [
-    'projects' => $projects,
-    'data'     => $data,
-    'latest_project_id' => $latestProject?->id,
-]);
+    $latestProject = Project::latest('id')->first();
 
-
-   // return view('dashboard.index', compact('data', 'projects'));
+    return view('dashboard.index', [
+        'projects' => $projects,
+        'data'     => $data,
+        'latest_project_id' => $latestProject?->id,
+    ]);
 }
+
+
+ private function getDerivedStatusCounts()
+{
+    $statuses = [
+        'open'        => 0,
+        'in_progress' => 0,
+        'needs_info'  => 0,
+        'resolved'    => 0,
+        'verified'    => 0,
+        'closed'      => 0,
+    ];
+
+    // 1️⃣ Load project-based statuses with their QA items
+    $rows = ProjectQaItemStatus::with('qaItem')->get();
+
+    foreach ($rows as $row) {
+
+        // Compute derived
+        $derived = $row->derived_status 
+            ?? ($row->qaItem->status ?? null);
+
+        if ($derived && isset($statuses[$derived])) {
+            $statuses[$derived]++;
+        }
+    }
+
+    // 2️⃣ Count items that DO NOT HAVE project status yet
+    $itemsWithoutStatus = QaItem::whereDoesntHave('projectStatus')->get();
+
+    foreach ($itemsWithoutStatus as $item) {
+        $raw = $item->status;
+        if (isset($statuses[$raw])) {
+            $statuses[$raw]++;
+        }
+    }
+
+    return $statuses;
+}
+
 
 
 
@@ -184,6 +225,7 @@ public function getProjectProgress1()
         'project_id',
         'qa_item_id',
         'applicable',
+        'incorporated',
         'confirmed'
     )->get()->groupBy('project_id');
 
@@ -202,6 +244,7 @@ public function getProjectProgress1()
             ->whereIn('qa_item_id', $projectQaItemIds);
 
         $projectApplicable = $projectStatuses->where('applicable', true)->count();
+        $projectIncorporated = $projectStatuses->where('incorporated', true)->count();
         $projectConfirmed  = $projectStatuses->where('confirmed', true)->count();
 
         $project->progress = $projectApplicable > 0
@@ -619,8 +662,92 @@ public function sheetStatusHeatmap(Request $request)
     ]);
 }
 
-
 public function phaseGateAnalytics(Request $request)
+{
+    $projectId = $request->integer('project_id'); // null if not sent
+
+    // 1) phases + relations (with filtering)
+    $phases = Phase::with(['project','sheets' => fn($q) => $q->select('id','phase_id')])
+        ->when($projectId, fn($q)=>$q->where('project_id',$projectId))
+        ->get();
+
+    if ($phases->isEmpty()) {
+        return response()->json([]); // لا يوجد phases للعرض
+    }
+
+    // 2) Build fast lookups
+    $sheetIds = $phases->flatMap(fn($p)=>$p->sheets->pluck('id'))->unique()->values();
+    $qaItems  = QAItem::select('id','sheet_id','severity')
+                  ->whereIn('sheet_id', $sheetIds)->get();
+    $qaBySheet = $qaItems->groupBy('sheet_id');
+    $qaById    = $qaItems->keyBy('id');
+
+    // احصر المشاريع المعنية فقط
+    $projectIds = $phases->pluck('project_id')->unique()->values();
+
+    $statuses = ProjectQAItemStatus::select('project_id','qa_item_id','applicable','incorporated','confirmed','comments')
+                  ->whereIn('project_id', $projectIds)
+                  ->get()
+                  ->groupBy('project_id');
+
+    $data = [];
+
+    foreach ($phases as $phase) {
+        $projId   = $phase->project_id;
+        $sheetIds = $phase->sheets->pluck('id');
+
+        // QA IDs داخل الشيتات
+        $phaseQaItemIds = $sheetIds->flatMap(
+            fn($sid)=> $qaBySheet->get($sid, collect())->pluck('id')
+        )->unique()->values();
+
+        // حالات هذا المشروع لعناصر هذه الـ phase
+        $phaseStatuses = $statuses->get($projId, collect())
+            ->whereIn('qa_item_id', $phaseQaItemIds);
+
+        // أحسب المؤشرات (0/1 صريح)
+        $totalApplicable = $phaseStatuses->where('applicable', 1)->count();
+        $completed = $phaseStatuses->filter(fn($s)=> (int)$s->applicable===1 && (int)$s->confirmed===1)->count();
+        $blocking  = $phaseStatuses->filter(fn($s)=> (int)$s->applicable===1 && (int)$s->confirmed===0)->count();
+        $critical  = $phaseStatuses->filter(function($s) use ($qaById){
+                        $sev = strtolower($qaById[$s->qa_item_id]->severity ?? '');
+                        return (int)$s->applicable===1 && (int)$s->confirmed===0
+                               && in_array($sev, ['critical','high']);
+                     })->count();
+
+        $percent = $totalApplicable > 0 ? round(($completed / $totalApplicable) * 100, 1) : 0.0;
+
+        // تقدير ETA بسيط
+        $capacityPerDay = 10;
+        $etaDays = $blocking > 0 ? (int) ceil($blocking / $capacityPerDay) : 0;
+        $etaDate = $etaDays ? now()->addDays($etaDays)->toDateString() : null;
+
+        $phaseStatus = match (true) {
+            $percent == 100 => 'CLOSED',
+            $blocking == 0  => 'READY_FOR_SIGNOFF',
+            $percent >= 50  => 'IN_REVIEW',
+            default         => 'CHANGES_REQUIRED',
+        };
+
+        $data[] = [
+            'phase_id'          => $phase->id,
+            'phase_type'        => $phase->type,
+            'phase_status'      => $phaseStatus,
+            'project'           => $phase->project->name,
+            'total_items'       => $totalApplicable,
+            'completed'         => $completed,
+            'blocking'          => $blocking,
+            'critical_blocking' => $critical,
+            'percent_complete'  => $percent,
+            'eta_signoff'       => $etaDate,
+        ];
+    }
+
+    return response()->json($data);
+}
+
+
+public function phaseGateAnalytics1(Request $request)
 {
     $projectId = $request->get('project_id');
 
@@ -663,11 +790,16 @@ public function phaseGateAnalytics(Request $request)
             ->whereIn('qa_item_id', $phaseQaItemIds);
 
         // Logic based on A/I/C
-        $totalApplicable = $phaseStatuses->where('applicable', true)->count();
+   /*     $totalApplicable = $phaseStatuses->where('applicable', true)->count();
         $totalConfirmed  = $phaseStatuses->where('confirmed', true)->count();
 
         // Completed = confirmed
         $completed = $totalConfirmed;
+        */
+$completed = $phaseStatuses
+    ->filter(fn($s) => (int)$s->applicable === 1 && (int)$s->confirmed === 1)
+    ->count(); // ✅
+
 
         // Blocking = Applicable but NOT Confirmed
         $blocking = $phaseStatuses
@@ -923,35 +1055,60 @@ public function phaseBurndown(Request $request)
         'total'     => $totalItems
     ]);
 }
-
 public function getQaItems(Request $req)
 {
     $sheetId = $req->sheet_id;
     $status  = $req->status;
+    $page    = $req->page ?? 1;
+    $perPage = 20;
 
-    $items = QaItem::where('sheet_id', $sheetId)
+    // Load all items with relationships
+    $query = QaItem::where('sheet_id', $sheetId)
         ->with(['sheet', 'assigneeUser', 'projectStatus'])
         ->get()
-        ->filter(function ($item) use ($status) {
+        ->map(function ($item) {
 
-            $ps = $item->projectStatus; // ONE record, not collection
+            // FIX: ensure projectStatus is ONE record only
+            $item->projectStatus =
+                $item->projectStatus instanceof \Illuminate\Support\Collection
+                    ? $item->projectStatus->first()
+                    : $item->projectStatus;
 
-            // A / I / C special cases
-            if (in_array($status, ['A', 'I', 'C'])) {
-                if (!$ps) return false;
-
-                return match($status) {
-                    'A' => $ps->applicable == 1,
-                    'I' => $ps->incorporated == 1,
-                    'C' => $ps->confirmed == 1,
-                };
-            }
-
-            $derived = $ps->derived_status ?? $item->status;
-
-            return $derived === $status;
+            return $item;
         })
+        ->unique('id')
+        ->values();
+
+    // FILTER
+    $filtered = $query->filter(function ($item) use ($status) {
+
+        $ps = $item->projectStatus;
+
+        // Handle A / I / C special indicators
+        if (in_array($status, ['A', 'I', 'C'])) {
+            if (!$ps) return false;
+
+            return match($status) {
+                'A' => $ps->applicable == 1,
+                'I' => $ps->incorporated == 1,
+                'C' => $ps->confirmed == 1,
+            };
+        }
+
+        // Normal derived status
+        $derived = $ps->derived_status ?? $item->status;
+
+        return $derived === $status;
+    });
+
+    // TOTAL COUNT
+    $total = $filtered->count();
+
+    // PAGINATE
+    $items = $filtered
+        ->slice(($page - 1) * $perPage, $perPage)
         ->map(function ($i) {
+
             $ps = $i->projectStatus;
 
             return [
@@ -966,8 +1123,14 @@ public function getQaItems(Request $req)
         })
         ->values();
 
-    return response()->json($items);
+    return response()->json([
+        'items'     => $items,
+        'total'     => $total,
+        'page'      => $page,
+        'per_page'  => $perPage
+    ]);
 }
+
 
 
 }

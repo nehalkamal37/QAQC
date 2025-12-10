@@ -117,13 +117,13 @@
         <i class="align-middle" data-feather="user"></i> <span class="align-middle">Profile</span>
     </a>
 </li>
-
+{{--
 					<li class="sidebar-item {{ request()->routeIs('demo.qc_checklist') ? 'active' : '' }}">
     <a class="sidebar-link" href="{{ route('demo.qc_checklist') }}">
   <i class="align-middle" data-feather="file-text"></i>        <span class="align-middle">Electrical QC Checklist</span>
     </a>
 </li>
-
+--}}
 
 
 

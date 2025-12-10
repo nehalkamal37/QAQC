@@ -292,10 +292,10 @@
 
 </div>
 --}}
-<div class="card shadow-sm mb-4 mt-4">
+{{-- <div class="card shadow-sm mb-4 mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div>
-            <h5 class="fw-bold mb-0">🚦 Phase Gate Analytics</h5>
+            <h5 class="fw-bold mb-0"> Phase Gate Analytics</h5>
             <small class="text-muted">
                 Progress, blocking items & signoff readiness for each phase
             </small>
@@ -309,7 +309,269 @@
         </div>
     </div>
 </div>
+--}}
 
+
+<div class="card shadow-sm mb-4 mt-4 border-0">
+    <div class="card-header d-flex justify-content-between align-items-center bg-gradient-primary text-white" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
+        <div>
+            <h5 class="fw-bold mb-0"> Phase Gate Analytics</h5>
+            <small class="text-white-75">
+                Progress, blocking items & signoff readiness for each phase
+            </small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-light" id="expandAllPhases">
+                <i class="fas fa-expand-alt me-1"></i> Expand All
+            </button>
+            <button class="btn btn-sm btn-outline-light" id="collapseAllPhases">
+                <i class="fas fa-compress-alt me-1"></i> Collapse All
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="phase-gates-container" id="phaseGatesContainer">
+            <!-- Loading State -->
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                <p class="text-muted">Loading phase analytics...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this CSS -->
+<style>
+    .phase-gate-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        background: white;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .phase-gate-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
+    }
+    
+    .phase-gate-header {
+        padding: 16px 20px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .phase-gate-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .phase-status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .phase-status-READY_FOR_SIGNOFF { background: #10b981; color: white; }
+    .phase-status-CHANGES_REQUIRED { background: #f59e0b; color: white; }
+    .phase-status-IN_REVIEW { background: #3b82f6; color: white; }
+    .phase-status-CLOSED { background: #6b7280; color: white; }
+    .phase-status-DRAFT { background: #9ca3af; color: white; }
+    
+    .phase-progress-container {
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .phase-gate-content {
+        padding: 20px;
+        background: white;
+    }
+    
+    .phase-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .phase-metric-card {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .phase-metric-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 4px;
+    }
+    
+    .phase-metric-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .phase-metric-critical {
+        color: #dc2626;
+    }
+    
+    .blocking-items-section {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 20px;
+    }
+    
+    .blocking-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        background: white;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        border-left: 4px solid #dc2626;
+    }
+    
+    .blocking-item.severity-high {
+        border-left-color: #dc2626;
+    }
+    
+    .blocking-item.severity-medium {
+        border-left-color: #f59e0b;
+    }
+    
+    .blocking-item.severity-low {
+        border-left-color: #10b981;
+    }
+    
+    .signoff-readiness {
+        background: linear-gradient(135deg, #dbeafe, #eff6ff);
+        border: 1px solid #93c5fd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .readiness-meter {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 12px 0;
+    }
+    
+    .readiness-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #34d399);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    
+    .phase-timeline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 20px;
+        padding: 16px;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+    
+    .timeline-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        flex: 1;
+    }
+    
+    .timeline-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        color: #64748b;
+        font-size: 14px;
+    }
+    
+    .timeline-icon.completed {
+        background: #10b981;
+        color: white;
+    }
+    
+    .timeline-icon.current {
+        background: #3b82f6;
+        color: white;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+    
+    .timeline-label {
+        font-size: 0.8rem;
+        color: #64748b;
+        text-align: center;
+        margin-top: 4px;
+    }
+    
+    .phase-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .phase-toggle {
+        background: none;
+        border: none;
+        color: #3b82f6;
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+    
+    .phase-toggle:hover {
+        background: #f1f5f9;
+    }
+    
+    .no-phases {
+        text-align: center;
+        padding: 60px 20px;
+        color: #64748b;
+    }
+    
+    .no-phases i {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        color: #cbd5e1;
+    }
+</style>
 
 
 
@@ -453,7 +715,8 @@
             </a>
         </div>
 
-        <!-- Reviewer Workload -->
+        <!-- Reviewer Workload 
+      
         <div class="col-lg-8">
             <div class="section-card">
                 <div class="section-header d-flex justify-content-between align-items-center">
@@ -499,6 +762,7 @@
                 </div>
             </div>
         </div>
+-->
     </div>
 
 
@@ -598,6 +862,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // =========================
     // 3) PHASE GATE ANALYTICS
     // =========================
+  /*
+  
     fetch("{{ route('analytics.phase-gates') }}")
         .then(res => res.json())
         .then(phases => {
@@ -665,7 +931,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-    // =========================
+   */
+        // =========================
     // 4) PHASE BURN-DOWN CHART
     // =========================
 
@@ -739,101 +1006,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
 
-
-    loadHeatmap();
-
-    document.getElementById("heatmapProjectFilter").addEventListener("change", loadHeatmap);
-function loadHeatmap() {
-
-    let projectId = document.getElementById("heatmapProjectFilter").value || "";
-    let phaseId   = document.getElementById("heatmapPhaseFilter").value || "";
-
-    fetch(`/analytics/sheet-heatmap?project_id=${projectId}&phase_id=${phaseId}`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.getElementById('sheetHeatmapBody');
-            tbody.innerHTML = "";
-
-
-                if (!data.rows || data.rows.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="11" class="text-center text-muted py-4">No data available.</td>
-                        </tr>`;
-                    return;
-                }
-
-             //   let lastGroup = "";
-
-                let headerPhase = data.rows[0]?.phase || "-";
-              let headerProject = data.rows[0]?.project || "-";
-
-      document.getElementById("heatmapHeaderInfo").innerHTML =
-      `Phase: <span class="text-primary">${headerPhase}</span> → 
-       Project: <span class="text-primary">${headerProject}</span>`;
-
-                data.rows.forEach(row => {
-
-                    let groupTitle = `Phase: ${row.phase || '-'} → Project: ${row.project || '-'}`;
-
-                    // Group Header
-              /*      if (groupTitle !== lastGroup) {
-                        lastGroup = groupTitle;
-                        tbody.innerHTML += `
-                            <tr class="table-group-row">
-                                <td colspan="11" class="fw-bold bg-light text-dark py-2">${groupTitle}</td>
-                            </tr>`;
-                    }*/
-
-                    const total = row.total;
-
-                    let statusCells = "";
-                    data.statuses.forEach(st => {
-                        const val = row[st] ?? 0;
-                        const bg = val > 0 ? "rgba(37,99,235,0.9)" : "transparent";
-                        const color = val > 0 ? "white" : "#333";
-
-                        statusCells += `
-                            <td class="text-center">
-                                <span class="badge heatmap-click"
-                                    data-sheet="${row.sheet_id}"
-                                    data-status="${st}"
-                                    style="cursor:pointer; background:${bg}; color:${color}; min-width:32px;">
-                                    ${val}
-                                </span>
-                            </td>`;
-                    });
-
-            
-                        tbody.innerHTML += `
-    <tr>
-        <td>${row.sheet_label}</td>
-        <td class="text-center fw-bold">${row.total}</td>
-        ${statusCells}
-        <td class="text-center text-primary fw-bold">${row.a_count}</td>
-        <td class="text-center text-info fw-bold">${row.i_count}</td>
-        <td class="text-center text-success fw-bold">${row.c_count}</td>
-    </tr>`;
-
-                });
-
-            })
-            .catch(err => {
-                console.error("Heatmap error:", err);
-                tbody.innerHTML = `
-                    <tr><td colspan="11" class="text-danger text-center py-3">
-                        Error loading heatmap
-                    </td></tr>`;
-            });
-    }
-
-});
-</script>
-
-  
 <!-- أزل هذا المودال بالكامل -->
 <!--
 <div class="modal fade" id="qaItemsModal" tabindex="-1">
@@ -919,6 +1092,1044 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
+<script>
+  // Function to close the QA items popup modal
+function closeQaPopup() {
+    const modal = document.getElementById('qaPopupModal');
+    const overlay = document.querySelector('.qa-popup-overlay');
 
+    if (modal) modal.remove();
+    if (overlay) overlay.remove();
+
+    // Optional: إعادة السماح بالسكرول في الصفحة
+    document.body.style.overflow = 'auto';
+}
+</script>
+
+<script >
+
+    // ==========================================
+// GLOBAL VARIABLES & STATE MANAGEMENT
+// ==========================================
+let isModalOpen = false;
+let isLoading = false;
+let hasMore = true;
+
+// ==========================================
+// SINGLE EVENT LISTENER FOR HEATMAP CLICKS
+// ==========================================
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("Dashboard initialized");
+    
+    // Load initial heatmap
+    loadHeatmap();
+    
+    // Filter event listeners
+    document.getElementById("heatmapProjectFilter").addEventListener("change", loadHeatmap);
+    
+    // SINGLE event listener for heatmap clicks
+    document.addEventListener("click", handleHeatmapClick);
+});
+
+// ==========================================
+// HEATMAP CLICK HANDLER
+// ==========================================
+function handleHeatmapClick(e) {
+    // Only handle heatmap-click elements
+    if (!e.target.classList.contains("heatmap-click")) return;
+    
+    // Prevent multiple clicks
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const sheetId = e.target.dataset.sheet;
+    const status = e.target.dataset.status;
+    
+    if (!sheetId || !status) {
+        console.error("Missing sheetId or status");
+        return;
+    }
+    
+    console.log(`Opening QA items: Sheet ${sheetId}, Status ${status}`);
+    
+    // Close existing modal if open
+    if (isModalOpen) {
+        closeQaPopup();
+        setTimeout(() => {
+            createQaModal(sheetId, status);
+        }, 50);
+    } else {
+        createQaModal(sheetId, status);
+    }
+}
+
+// ==========================================
+// LOAD HEATMAP FUNCTION
+// ==========================================
+function loadHeatmap() {
+    const projectId = document.getElementById("heatmapProjectFilter").value || "";
+    const phaseId = document.getElementById("heatmapPhaseFilter").value || "";
+    const tbody = document.getElementById('sheetHeatmapBody');
+    
+    // Show loading
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="12" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                Loading heatmap...
+            </td>
+        </tr>`;
+    
+    fetch(`/analytics/sheet-heatmap?project_id=${projectId}&phase_id=${phaseId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.rows || data.rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">
+                            No data available for selected filters.
+                        </td>
+                    </tr>`;
+                return;
+            }
+            
+            // Update header
+            const headerPhase = data.rows[0]?.phase || "-";
+            const headerProject = data.rows[0]?.project || "-";
+            
+            document.getElementById("heatmapHeaderInfo").innerHTML = 
+                `Phase: <span class="text-primary">${headerPhase}</span> → 
+                 Project: <span class="text-primary">${headerProject}</span>`;
+            
+            // Clear and rebuild table
+            tbody.innerHTML = "";
+            
+            data.rows.forEach(row => {
+                let statusCells = "";
+                
+                if (data.statuses && Array.isArray(data.statuses)) {
+                    data.statuses.forEach(st => {
+                        const val = row[st] ?? 0;
+                        const bg = val > 0 ? "rgba(37,99,235,0.9)" : "transparent";
+                        const color = val > 0 ? "white" : "#333";
+                        
+                        statusCells += `
+                            <td class="text-center">
+                                <span class="badge heatmap-click"
+                                    data-sheet="${row.sheet_id}"
+                                    data-status="${st}"
+                                    style="cursor:pointer; background:${bg}; color:${color}; min-width:32px;">
+                                    ${val}
+                                </span>
+                            </td>`;
+                    });
+                }
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${row.sheet_label || "-"}</td>
+                        <td class="text-center fw-bold">${row.total || 0}</td>
+                        ${statusCells}
+                        <td class="text-center text-primary fw-bold">${row.a_count || 0}</td>
+                        <td class="text-center text-info fw-bold">${row.i_count || 0}</td>
+                        <td class="text-center text-success fw-bold">${row.c_count || 0}</td>
+                    </tr>`;
+            });
+            
+            console.log(`Heatmap loaded: ${data.rows.length} rows`);
+        })
+        .catch(err => {
+            console.error("Heatmap error:", err);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="text-center text-danger py-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading heatmap data
+                    </td>
+                </tr>`;
+        });
+}
+
+// ==========================================
+// MODAL FUNCTIONS
+// ==========================================
+function createQaModal(sheetId, status) {
+    isModalOpen = true;
+    
+    // Create modal elements
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'qaPopupModal';
+    modalContainer.className = 'qa-popup-modal';
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'qa-popup-overlay';
+    
+    // Modal HTML
+    modalContainer.innerHTML = `
+        <div class="qa-popup-content">
+            <div class="qa-popup-header">
+                <div class="qa-popup-title">
+                    <i class="fas fa-tasks me-2"></i>
+                    QA Items — <span id="popupStatus">${status.toUpperCase()}</span>
+                    <span id="popupCount" class="ms-2 badge bg-light text-dark" style="font-size: 0.8rem;"></span>
+                </div>
+                <button type="button" class="qa-popup-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="qa-popup-body" id="popupBody">
+                <div id="popupLoading" class="qa-popup-loading">
+                    <div class="spinner-border text-primary" style="width:3rem; height:3rem;"></div>
+                    <p class="mt-3 text-muted fw-semibold">Loading items…</p>
+                </div>
+                
+                <div id="popupItemsContainer" class="qa-popup-items d-none">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width:70px;">ID</th>
+                                    <th>Description</th>
+                                    <th>Sheet</th>
+                                    <th>Status</th>
+                                    <th>Assigned To</th>
+                                    <th>Due Date</th>
+                                    <th>Created</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="popupItemsBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="popupLoadMore" class="qa-popup-load-more d-none">
+                        <button id="loadMoreBtn">
+                            <i class="fas fa-chevron-down me-1"></i> Load More Items
+                        </button>
+                    </div>
+                    
+                    <div id="infiniteLoading" class="qa-popup-infinite-loading d-none">
+                        <div class="spinner-border spinner-border-sm text-secondary me-2"></div>
+                        Loading more items...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="qa-popup-footer d-none" id="popupFooter">
+                <div class="d-flex justify-content-between align-items-center px-3 py-2">
+                    <small class="text-muted">
+                        Showing <span id="showingCount">0</span> of <span id="totalCount">0</span> items
+                    </small>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary me-2" id="scrollTopBtn">
+                            <i class="fas fa-arrow-up"></i> Top
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="scrollBottomBtn">
+                            <i class="fas fa-arrow-down"></i> Bottom
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add to document
+    document.body.appendChild(overlay);
+    document.body.appendChild(modalContainer);
+    
+    // Show with animation
+    setTimeout(() => {
+        overlay.classList.add('show');
+        modalContainer.classList.add('show');
+    }, 10);
+    
+    // Store data
+    modalContainer.dataset.sheetId = sheetId;
+    modalContainer.dataset.status = status;
+    modalContainer.dataset.currentPage = 1;
+    modalContainer.dataset.totalItems = 0;
+    
+    // Setup event listeners for modal
+    setupModalEvents(modalContainer, overlay);
+    
+    // Load data
+    loadPopupData(sheetId, status, 1);
+}
+
+function setupModalEvents(modal, overlay) {
+    // Close button
+    const closeBtn = modal.querySelector('.qa-popup-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            isModalOpen = false;
+            closeQaPopup();
+        });
+    }
+    
+    // Overlay click to close
+    overlay.addEventListener('click', () => {
+        isModalOpen = false;
+        closeQaPopup();
+    });
+    
+    // Scroll buttons
+    const scrollTopBtn = modal.querySelector('#scrollTopBtn');
+    const scrollBottomBtn = modal.querySelector('#scrollBottomBtn');
+    
+    if (scrollTopBtn) {
+        scrollTopBtn.addEventListener('click', () => {
+            const popupBody = document.getElementById('popupBody');
+            if (popupBody) popupBody.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+    
+    if (scrollBottomBtn) {
+        scrollBottomBtn.addEventListener('click', () => {
+            const popupBody = document.getElementById('popupBody');
+            if (popupBody) popupBody.scrollTo({ top: popupBody.scrollHeight, behavior: 'smooth' });
+        });
+    }
+    
+    // Load more button
+    const loadMoreBtn = modal.querySelector('#loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMoreItems);
+    }
+    
+    // Infinite scroll
+    const popupBody = document.getElementById('popupBody');
+    if (popupBody) {
+        popupBody.addEventListener('scroll', handlePopupScroll);
+    }
+}
+
+function closeQaPopup() {
+    isModalOpen = false;
+    isLoading = false;
+    hasMore = true;
+    
+    const modal = document.getElementById('qaPopupModal');
+    const overlay = document.querySelector('.qa-popup-overlay');
+    
+    if (modal) {
+        // Remove scroll event listener
+        const popupBody = modal.querySelector('#popupBody');
+        if (popupBody) {
+            popupBody.removeEventListener('scroll', handlePopupScroll);
+        }
+        modal.remove();
+    }
+    
+    if (overlay) overlay.remove();
+    
+    document.body.style.overflow = 'auto';
+}
+
+// ==========================================
+// DATA LOADING FUNCTIONS
+// ==========================================
+function loadPopupData(sheetId, status, page = 1) {
+    const tbody = document.getElementById('popupItemsBody');
+    const loading = document.getElementById('popupLoading');
+    const container = document.getElementById('popupItemsContainer');
+    const loadMoreDiv = document.getElementById('popupLoadMore');
+    
+    if (!tbody || !loading || !container) return;
+    
+    // Reset
+    tbody.innerHTML = '';
+    isLoading = false;
+    
+    if (loadMoreDiv) {
+        loadMoreDiv.classList.add('d-none');
+    }
+    
+    loading.classList.remove('d-none');
+    container.classList.add('d-none');
+    
+    fetch(`/analytics/qa-items?sheet_id=${sheetId}&status=${status}&page=${page}`)
+        .then(res => res.json())
+        .then(data => {
+            const modal = document.getElementById('qaPopupModal');
+            if (modal) {
+                modal.dataset.totalItems = data.total || 0;
+            }
+            
+            if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i><br>
+                            <h5 class="mt-2">No QA items found</h5>
+                            <p class="small">No items match the selected criteria</p>
+                        </td>
+                    </tr>`;
+                hasMore = false;
+            } else {
+                appendItemsToTable(data.items);
+                
+                // Check if we should show load more button
+                const itemsPerPage = 20;
+                const totalLoaded = page * itemsPerPage;
+                hasMore = totalLoaded < (data.total || 0);
+                
+                if (hasMore && loadMoreDiv) {
+                    loadMoreDiv.classList.remove('d-none');
+                } else if (loadMoreDiv) {
+                    loadMoreDiv.classList.add('d-none');
+                }
+            }
+            
+            loading.classList.add('d-none');
+            container.classList.remove('d-none');
+            updateCounters();
+            
+            setTimeout(adjustModalHeight, 100);
+        })
+        .catch(err => {
+            console.error("Error loading items:", err);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-danger py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i><br>
+                        <h5 class="mt-2">Error loading QA items</h5>
+                        <p class="small">${err.message || 'Please try again later'}</p>
+                        <button onclick="loadPopupData('${sheetId}', '${status}', ${page})" 
+                                class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fas fa-redo me-1"></i> Retry
+                        </button>
+                    </td>
+                </tr>`;
+            
+            loading.classList.add('d-none');
+            container.classList.remove('d-none');
+        });
+}
+
+function handlePopupScroll(e) {
+    const container = e.target;
+    const modal = document.getElementById('qaPopupModal');
+    
+    if (!container || !modal || isLoading || !hasMore) return;
+    
+    const currentPage = parseInt(modal.dataset.currentPage);
+    if (currentPage === 1) return;
+    
+    const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    
+    if (scrollBottom < 100) {
+        loadMoreItems();
+    }
+}
+
+function loadMoreItems() {
+    const modal = document.getElementById('qaPopupModal');
+    if (!modal || isLoading) return;
+    
+    const sheetId = modal.dataset.sheetId;
+    const status = modal.dataset.status;
+    const currentPage = parseInt(modal.dataset.currentPage) + 1;
+    
+    const infiniteLoading = document.getElementById('infiniteLoading');
+    if (infiniteLoading) {
+        infiniteLoading.classList.remove('d-none');
+    }
+    
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.disabled = true;
+    }
+    
+    isLoading = true;
+    
+    fetch(`/analytics/qa-items?sheet_id=${sheetId}&status=${status}&page=${currentPage}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.items && data.items.length > 0) {
+                modal.dataset.currentPage = currentPage;
+                modal.dataset.totalItems = data.total || 0;
+                
+                appendItemsToTable(data.items);
+                updateCounters();
+                
+                const itemsPerPage = 20;
+                const totalLoaded = currentPage * itemsPerPage;
+                hasMore = totalLoaded < (data.total || 0);
+                
+                if (!hasMore) {
+                    const loadMoreDiv = document.getElementById('popupLoadMore');
+                    if (loadMoreDiv) {
+                        loadMoreDiv.classList.add('d-none');
+                    }
+                }
+            } else {
+                hasMore = false;
+                const loadMoreDiv = document.getElementById('popupLoadMore');
+                if (loadMoreDiv) {
+                    loadMoreDiv.classList.add('d-none');
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Error loading more items:", err);
+        })
+        .finally(() => {
+            isLoading = false;
+            if (infiniteLoading) {
+                infiniteLoading.classList.add('d-none');
+            }
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+            }
+        });
+}
+
+function appendItemsToTable(items) {
+    const tbody = document.getElementById('popupItemsBody');
+    if (!tbody) return;
+    
+    items.forEach(item => {
+        const statusClass = getStatusClass(item.status);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.id || "-"}</td>
+            <td>${item.description || "No description"}</td>
+            <td>${item.sheet_label || "-"}</td>
+            <td>
+                <span class="status-badge ${statusClass}">
+                    ${item.status || "-"}
+                </span>
+            </td>
+            <td>${item.assignee || "-"}</td>
+            <td>${item.due_date || "-"}</td>
+            <td>${item.created_at || "-"}</td>
+            <td class="text-center">
+                <a href="/qa_reviews/${item.id}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-eye"></i> View
+                </a>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function getStatusClass(status) {
+    const statusParam = document.getElementById('popupStatus')?.textContent?.trim() || '';
+    if (statusParam === 'A') return "status-A";
+    if (statusParam === 'I') return "status-I";
+    if (statusParam === 'C') return "status-C";
+    
+    const st = (status || "").toLowerCase();
+    
+    const statusMap = {
+        "open": "status-open",
+        "in_progress": "status-in_progress",
+        "in-progress": "status-in_progress",
+        "needs_info": "status-needs_info",
+        "needs-info": "status-needs_info",
+        "resolved": "status-resolved",
+        "verified": "status-verified",
+        "closed": "status-closed"
+    };
+    
+    return statusMap[st] || "status-open";
+}
+
+function updateCounters() {
+    const modal = document.getElementById('qaPopupModal');
+    if (!modal) return;
+    
+    const tbody = document.getElementById('popupItemsBody');
+    const currentCount = tbody ? tbody.children.length : 0;
+    const totalCount = modal.dataset.totalItems || currentCount;
+    
+    document.getElementById('showingCount').textContent = currentCount;
+    document.getElementById('totalCount').textContent = totalCount;
+    document.getElementById('popupCount').textContent = `${currentCount} items`;
+    
+    const footer = document.getElementById('popupFooter');
+    if (footer) {
+        footer.classList[currentCount > 0 ? 'remove' : 'add']('d-none');
+    }
+}
+
+function adjustModalHeight() {
+    const modal = document.getElementById('qaPopupModal');
+    const body = document.getElementById('popupBody');
+    const itemsContainer = document.getElementById('popupItemsContainer');
+    
+    if (!modal || !body || !itemsContainer) return;
+    
+    const viewportHeight = window.innerHeight;
+    const modalHeaderHeight = modal.querySelector('.qa-popup-header')?.offsetHeight || 70;
+    const modalFooterHeight = modal.querySelector('.qa-popup-footer')?.offsetHeight || 0;
+    const contentHeight = itemsContainer.scrollHeight;
+    
+    const maxBodyHeight = Math.min(
+        contentHeight,
+        viewportHeight * 0.8 - modalHeaderHeight - modalFooterHeight - 48
+    );
+    
+    body.style.maxHeight = `${maxBodyHeight}px`;
+    
+    const tableResponsive = itemsContainer.querySelector('.table-responsive');
+    if (tableResponsive) {
+        tableResponsive.style.maxHeight = `${maxBodyHeight - 100}px`;
+    }
+}
+
+// Handle window resize
+window.addEventListener('resize', adjustModalHeight);
+
+</script>
+
+
+
+
+
+
+
+
+<!-- Add this JavaScript -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // =========================
+    // PHASE GATE ANALYTICS
+    // =========================
+    fetch("{{ route('analytics.phase-gates') }}")
+        .then(res => res.json())
+        .then(phases => {
+            const container = document.getElementById('phaseGatesContainer');
+
+            if (!phases || phases.length === 0) {
+                container.innerHTML = `
+                    <div class="no-phases">
+                        <i class="fas fa-chart-line"></i>
+                        <h5 class="mt-3 mb-2">No Phase Data Available</h5>
+                        <p class="text-muted">Start creating phases and QA items to see analytics here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            phases.forEach((p, index) => {
+                const isExpanded = index === 0; // First phase expanded by default
+                
+                const progressPercentage = p.percent_complete ?? 0;
+                const blockingPercentage = p.total_items > 0 ? ((p.blocking / p.total_items) * 100) : 0;
+                const readinessPercentage = p.ready_for_signoff ? 100 : Math.min(progressPercentage, 100);
+                
+                // Generate timeline based on phase status
+                const timelineStages = generateTimeline(p.phase_status);
+                
+                const card = document.createElement('div');
+                card.className = 'phase-gate-card';
+                card.innerHTML = `
+                    <div class="phase-gate-header" data-phase-id="${p.phase_id}">
+                        <div class="phase-gate-title">
+                            <div class="phase-status-badge phase-status-${p.phase_status || 'DRAFT'}">
+                                ${p.phase_status || 'DRAFT'}
+                            </div>
+                            <div>
+                                <strong class="text-dark">${p.project || 'Unnamed Project'}</strong>
+                                <div class="text-muted small">${p.phase_type || 'Phase'} • ID: ${p.phase_id}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="phase-progress-container">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Overall Progress</small>
+                                    <small class="fw-bold">${progressPercentage.toFixed(1)}%</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" 
+                                         role="progressbar" 
+                                         style="width: ${progressPercentage}%">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="phase-progress-container">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Blocking Items</small>
+                                    <small class="fw-bold text-danger">${p.blocking || 0}</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-danger" 
+                                         role="progressbar" 
+                                         style="width: ${blockingPercentage}%">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="phase-toggle" data-toggle="collapse">
+                                <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'}"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-gate-content collapse ${isExpanded ? 'show' : ''}" 
+                         data-phase-content="${p.phase_id}">
+                        
+                        <div class="phase-metrics-grid">
+                            <div class="phase-metric-card">
+                                <div class="phase-metric-value">${p.total_items || 0}</div>
+                                <div class="phase-metric-label">Total Items(Applicable only)</div>
+                            </div>
+                            
+                            <div class="phase-metric-card">
+                                <div class="phase-metric-value">${p.completed || 0}</div>
+                                <div class="phase-metric-label">Completed[Applicable + Confirmed]</div>
+                            </div>
+                            
+                            <div class="phase-metric-card">
+                                <div class="phase-metric-value">${p.blocking || 0}</div>
+                                <div class="phase-metric-label">Blocking(non-applicable)</div>
+                            </div>
+                            
+                            <div class="phase-metric-card">
+                                <div class="phase-metric-value phase-metric-critical">${p.critical_blocking || 0}</div>
+                                <div class="phase-metric-label">Critical Blocking</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sign-off Readiness -->
+                        <div class="signoff-readiness">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong class="text-primary">Sign-off Readiness</strong>
+                                    <div class="text-muted small">
+                                        ${p.ready_for_signoff ? '✅ Ready for Sign-off' : '⚠️ Not ready for Sign-off'}
+                                    </div>
+                                </div>
+                                <div class="fw-bold">${readinessPercentage.toFixed(1)}%</div>
+                            </div>
+                            <div class="readiness-meter">
+                                <div class="readiness-fill" style="width: ${readinessPercentage}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">ETA: ${p.eta_signoff || 'Not available'}</small>
+                                <small class="text-muted">
+                                    ${p.ready_for_signoff ? 'All checks passed' : 'Review blocking items below'}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Blocking Items Section -->
+                        ${p.blocking > 0 ? `
+                        <div class="blocking-items-section">
+                            <h6 class="fw-bold text-danger mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Blocking Items (${p.blocking})
+                            </h6>
+                            ${generateBlockingItems(p.blocking_items || [])}
+                        </div>
+                        ` : `
+                        <div class="alert alert-success mt-3">
+                            <i class="fas fa-check-circle me-2"></i>
+                            No blocking items! Phase is progressing smoothly.
+                        </div>
+                        `}
+                        
+                        <!-- Timeline -->
+                        <div class="phase-timeline">
+                            ${timelineStages.map(stage => `
+                                <div class="timeline-item">
+                                    <div class="timeline-icon ${stage.status}">
+                                        <i class="fas fa-${stage.icon}"></i>
+                                    </div>
+                                    <div class="timeline-label">${stage.label}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Actions 
+                        <div class="phase-actions">
+                            <button class="btn btn-sm btn-primary" onclick="viewPhaseDetails(${p.phase_id})">
+                                <i class="fas fa-eye me-1"></i> View Phase Details
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewQaItems(${p.phase_id})">
+                                <i class="fas fa-list-check me-1"></i> View QA Items
+                            </button>
+                            ${p.ready_for_signoff ? `
+                            <button class="btn btn-sm btn-success ms-auto" onclick="initiateSignoff(${p.phase_id})">
+                                <i class="fas fa-file-signature me-1"></i> Initiate Sign-off
+                            </button>
+                            ` : ''}
+                        </
+                        div>
+-->
+                        
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            // Add click handlers for expand/collapse
+            document.querySelectorAll('.phase-gate-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const phaseId = this.dataset.phaseId;
+                    const content = document.querySelector(`[data-phase-content="${phaseId}"]`);
+                    const toggleBtn = this.querySelector('.phase-toggle i');
+                    
+                    content.classList.toggle('show');
+                    toggleBtn.className = content.classList.contains('show') 
+                        ? 'fas fa-chevron-up' 
+                        : 'fas fa-chevron-down';
+                });
+            });
+
+            // Expand/Collapse All buttons
+            document.getElementById('expandAllPhases').addEventListener('click', function() {
+                document.querySelectorAll('.phase-gate-content').forEach(content => {
+                    content.classList.add('show');
+                });
+                document.querySelectorAll('.phase-toggle i').forEach(icon => {
+                    icon.className = 'fas fa-chevron-up';
+                });
+            });
+
+            document.getElementById('collapseAllPhases').addEventListener('click', function() {
+                document.querySelectorAll('.phase-gate-content').forEach(content => {
+                    content.classList.remove('show');
+                });
+                document.querySelectorAll('.phase-toggle i').forEach(icon => {
+                    icon.className = 'fas fa-chevron-down';
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading phase gates:', error);
+            document.getElementById('phaseGatesContainer').innerHTML = `
+                <div class="alert alert-danger m-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Failed to load phase analytics. Please try again.
+                </div>
+            `;
+        });
+});
+
+function generateBlockingItems(items) {
+    if (!items || items.length === 0) {
+        return '<div class="text-muted small">No specific blocking items available.</div>';
+    }
+    
+    return items.slice(0, 5).map(item => `
+        <div class="blocking-item severity-${item.severity || 'medium'}">
+            <i class="fas fa-circle text-danger me-2" style="font-size: 8px;"></i>
+            <div class="flex-grow-1">
+                <div class="fw-medium">${item.title || 'Untitled Item'}</div>
+                <small class="text-muted">${item.sheet_label || 'Unknown Sheet'} • ID: ${item.id}</small>
+            </div>
+            <span class="badge bg-${item.severity === 'critical' ? 'danger' : 'warning'}">
+                ${item.severity || 'medium'}
+            </span>
+        </div>
+    `).join('');
+}
+
+function generateTimeline(phaseStatus) {
+    const stages = [
+        { icon: 'file-alt', label: 'Draft', status: 'completed' },
+        { icon: 'play-circle', label: 'In Review', status: phaseStatus === 'IN_REVIEW' || 
+                                                         phaseStatus === 'CHANGES_REQUIRED' || 
+                                                         phaseStatus === 'READY_FOR_SIGNOFF' || 
+                                                         phaseStatus === 'CLOSED' ? 'completed' : '' },
+        { icon: 'check-circle', label: 'Ready', status: phaseStatus === 'READY_FOR_SIGNOFF' || 
+                                                      phaseStatus === 'CLOSED' ? 'completed' : 
+                                                      phaseStatus === 'CHANGES_REQUIRED' ? 'current' : '' },
+        { icon: 'file-signature', label: 'Signed', status: phaseStatus === 'CLOSED' ? 'completed' : '' }
+    ];
+    
+    // Mark current stage
+    const statusMap = {
+        'DRAFT': 0,
+        'IN_REVIEW': 1,
+        'CHANGES_REQUIRED': 1,
+        'READY_FOR_SIGNOFF': 2,
+        'CLOSED': 3
+    };
+    
+    const currentIndex = statusMap[phaseStatus] || 0;
+    if (stages[currentIndex]) {
+        stages[currentIndex].status = 'current';
+    }
+    
+    return stages;
+}
+
+// Example action functions
+function viewPhaseDetails(phaseId) {
+    window.location.href = `/phases/${phaseId}`;
+}
+
+function viewQaItems(phaseId) {
+    window.location.href = `/qa_items?phase_id=${phaseId}`;
+}
+
+function initiateSignoff(phaseId) {
+    if (confirm('Are you sure you want to initiate sign-off for this phase?')) {
+        // Implement sign-off initiation logic
+        alert(`Sign-off initiated for phase ${phaseId}. This would typically open a sign-off workflow.`);
+    }
+}
+</script>
+
+
+
+<style>
+    /* Smooth scrolling and scrollbar styling */
+.qa-popup-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    background: #f8fafc;
+    scroll-behavior: smooth;
+    height: calc(100% - 0px);
+}
+
+/* Custom scrollbar for the modal body */
+.qa-popup-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.qa-popup-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.qa-popup-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.qa-popup-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* For Firefox */
+.qa-popup-body {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Scrollbar for the table if content is too wide */
+.qa-popup-items .table-responsive {
+    max-height: 450px;
+    overflow-y: auto;
+    margin-right: 4px;
+    padding-right: 4px;
+}
+
+.qa-popup-items .table-responsive::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.qa-popup-items .table-responsive::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.qa-popup-items .table-responsive::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 3px;
+}
+
+/* Make table header sticky when scrolling */
+.qa-popup-items thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f1f5f9 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Pagination or loading indicator */
+.qa-popup-load-more {
+    text-align: center;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.qa-popup-load-more button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.qa-popup-load-more button:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+/* Infinite scroll loading indicator */
+.qa-popup-infinite-loading {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+
+
+.qa-popup-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    width: 90%;
+    max-width: 1100px;
+    height: 50vh;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.qa-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 99998;
+}
+
+.qa-popup-header {
+    padding: 16px 20px;
+    background: #1e3a8a;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.qa-popup-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
+}
+
+.table-responsive {
+    max-height: 65vh !important;
+    overflow-y: auto;
+}
+
+    </style>
 @endsection
 

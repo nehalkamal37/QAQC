@@ -495,7 +495,7 @@ public function uploadAndSave(Request $request)
             // -----------------------------
             // 5) Create or locate QA Item Template
             // -----------------------------
-            $qaItem = \App\Models\QAItem::firstOrCreate(
+     /*       $qaItem = \App\Models\QAItem::firstOrCreate(
                 [
                     'item_description' => $cleanDesc
                 ],
@@ -503,6 +503,17 @@ public function uploadAndSave(Request $request)
                     'sheet_id' => $sheetId,
                 ]
             );
+*/
+                $qaItem = QAItem::where('item_description', $description)
+    ->where('sheet_id', $sheetId)
+    ->first();
+
+if (!$qaItem) {
+    $qaItem = QAItem::create([
+        'item_description' => $description,
+        'sheet_id' => $sheetId,
+    ]);
+}
 
             // -----------------------------
             // 6) Insert project-specific status
@@ -541,10 +552,12 @@ public function uploadExcelAndSave(Request $request)
     $request->validate([
         'excel_file' => 'required|file|mimes:xlsx,xls',
         'project_id' => 'required|exists:projects,id',
+        'phase_id'   => 'required|exists:phases,id',
         'sheet_id'   => 'required|exists:sheets,id',
     ]);
 
     $projectId = $request->project_id;
+    $phaseId   = $request->phase_id;
     $sheetId   = $request->sheet_id;
 
     try {
@@ -585,7 +598,7 @@ public function uploadExcelAndSave(Request $request)
             }
 
             // Create or find QA Item template
-            $qaItem = QAItem::firstOrCreate(
+       /*     $qaItem = QAItem::firstOrCreate(
                 [
                     'item_description' => $description
                 ],
@@ -593,6 +606,18 @@ public function uploadExcelAndSave(Request $request)
                     'sheet_id' => $sheetId,
                 ]
             );
+*/
+            $qaItem = QAItem::where('item_description', $description)
+    ->where('sheet_id', $sheetId)
+    ->first();
+
+if (!$qaItem) {
+    $qaItem = QAItem::create([
+        'item_description' => $description,
+        'sheet_id' => $sheetId,
+    ]);
+}
+
 
             // Create project-specific status (same as PDF logic)
             ProjectQAItemStatus::create([

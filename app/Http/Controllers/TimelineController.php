@@ -25,7 +25,22 @@ class TimelineController extends Controller
     $dueFrom     = $request->due_from;
     $dueTo       = $request->due_to;
 
-    $logs = ActivityLog::with(['user','project','phase','sheet','item'])
+  //  $logs = ActivityLog::with(['user','project','phase','sheet','item'])
+$logs = ActivityLog::query()
+    ->with(['user','project','phase','sheet','item'])
+    ->leftJoin('project_qa_item_statuses as pq', function ($j) {
+        $j->on('pq.qa_item_id', '=', 'activity_logs.qa_item_id')
+          ->on('pq.project_id', '=', 'activity_logs.project_id');
+    })
+    ->select('activity_logs.*')
+
+// ...
+->when($assignedTo, function($q) use ($assignedTo) {
+    $q->where(function($w) use ($assignedTo) {
+        $w->whereRaw("JSON_EXTRACT(activity_logs.new_value, '$.assigned_to') = ?", [json_encode((string)$assignedTo)])
+          ->orWhere('pq.assigned_to', (string)$assignedTo);
+    });
+})
 
         // User
         ->when($user, fn($q) => $q->where('user_id', $user))
@@ -45,14 +60,15 @@ class TimelineController extends Controller
         )
 
         // 🔥 New: Assigned To filter (project-level)
-        ->when($assignedTo, fn($q) =>
+     /*   ->when($assignedTo, fn($q) =>
             $q->whereJsonContains('new_value->assigned_to', $assignedTo)
         )
-
+*/
         // 🔥 New: Applicable filter
         ->when(!is_null($applicable), fn($q) =>
             $q->whereJsonContains('new_value->applicable', (int)$applicable)
         )
+
 
         // 🔥 New: Incorporated filter
         ->when(!is_null($incorporated), fn($q) =>
@@ -64,6 +80,8 @@ class TimelineController extends Controller
             $q->whereJsonContains('new_value->confirmed', (int)$confirmed)
         )
 
+
+        
         // 🔥 New: Due date range
         ->when($dueFrom, fn($q) =>
             $q->where('new_value->due_date', '>=', $dueFrom)
@@ -80,7 +98,16 @@ class TimelineController extends Controller
                         $i->where('item_description','like',"%$search%")
                     )
                     ->orWhereJsonContains('new_value->comments', $search)
-                    ->orWhereJsonContains('new_value->status', $search)
+                //    ->orWhereJsonContains('new_value->status', $search)
+                    // before: only new_value
+->orWhereJsonContains('new_value->status', $search)
+
+// after: include old_value and fallback LIKE against the raw JSON blob
+->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(activity_logs.new_value, '$.status')) LIKE ?", ["%{$search}%"])
+->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(activity_logs.old_value,  '$.status')) LIKE ?", ["%{$search}%"])
+->orWhere('activity_logs.new_value', 'like', "%{$search}%") // fallback
+->orWhere('activity_logs.old_value', 'like', "%{$search}%") // fallback
+
                     ->orWhereJsonContains('new_value->assigned_to', $search)
                     ->orWhereJsonContains('new_value->due_date', $search)
                     ->orWhereJsonContains('new_value->applicable', $search)
