@@ -6,7 +6,7 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 fw-bold mb-1 text-dark">📊 Dashboard Overview</h1>
+            <h1 class="h3 fw-bold mb-1 text-dark">Dashboard Overview</h1>
             <p class="text-muted mb-0">Welcome back! Here's your project summary.</p>
         </div>
         <div class="date-display">
