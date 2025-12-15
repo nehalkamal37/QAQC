@@ -11,11 +11,13 @@ use App\Http\Controllers\PhaseStatusController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\ChecklistController;
-    use App\Services\NotificationService;
+use App\Services\NotificationService;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\QcUploadController;
 use App\Http\Controllers\PhaseKanbanController;
-
+use App\Http\Controllers\ReportScheduleController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 // ======================
 // Auth routes
 // ======================
@@ -73,7 +75,6 @@ Route::get('/timeline', [\App\Http\Controllers\TimelineController::class, 'index
     ->name('timeline.index')
     ->middleware('auth');
 
-Route::get('/qa-items/all', [QaItemController::class, 'indexAll'])->name('qa_items.indexAll');
 Route::get('/reviews', [QaItemController::class, 'reviewsIndex'])->name('qa_reviews.index');
 // routes/web.php
    //Route::get('/reviews', [QaItemController::class, 'reviewsIndex'])->name('reviews.index');
@@ -132,6 +133,7 @@ Route::delete('/timeline/{id}', [\App\Http\Controllers\TimelineController::class
             Route::get('qa-items/{qaItem}/edit', [QaItemController::class, 'edit'])->name('qa_items.edit');
             Route::put('qa-items/{qaItem}', [QaItemController::class, 'update'])->name('qa_items.update');
             Route::delete('qa-items/{qaItem}', [QaItemController::class, 'destroy'])->name('qa_items.destroy');
+            Route::get('/qa-items/{qa_item}', [App\Http\Controllers\QaItemController::class, 'show'])->name('qa_items.show');
 
             // Import (form + preview)
             Route::get('qa-items/import', [QaItemController::class, 'importForm'])
@@ -226,27 +228,18 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])
 Route::resource('assignments', AssignmentController::class);
 Route::post('assignments/bulk', [AssignmentController::class, 'bulkAssign'])->name('assignments.bulk');
 
-// routes/api.php
-Route::get('/projects/{project}/phases', function (Project $project) {
-    return $project->phases;
-});
 
 
 // my work dashboard route
 Route::get('/my-work', [DashboardController::class, 'myWork'])->name('dashboard.my-work');
 // routes/web.php
 
-// Option A: Resource route (recommended)
-Route::resource('qa-items', App\Http\Controllers\QaItemController::class);
-
-// Option B: Individual routes
-Route::get('/qa-items/{qa_item}', [App\Http\Controllers\QaItemController::class, 'show'])->name('qa_items.show');
 
 // assign to me route if item not assigned to anyone
-Route::post('/qa-items/{qa_item}/assign-to-me', [QaItemController::class, 'assignToMe'])->name('qa_items.assign-to-me');
+Route::post('/qa-items/{qa_item}/assign-to-me', [QaItemController::class, 'assignToMe'])
+    ->name('qa_items.assign-to-me')
+    ->middleware('auth');
 
-// route for status updates for the assigned QA items
-Route::post('/qa-items/{qa_item}/assign-to-me', [QaItemController::class, 'assignToMe'])->name('qa_items.assign-to-me');
 Route::patch('/qa-items/{qa_item}/update-status', [QaItemController::class, 'updateStatusAssigned'])->name('qa_items.update-status');
 
 // pdf checklist upload route
@@ -370,10 +363,7 @@ Route::get('/qc-test', function () {
 });
 
 
-//Route::get('/upload-checklist', [ChecklistController::class, 'showForm'])->name('checklist.form');
 
-Route::post('/upload-checklist', [ChecklistController::class, 'preview'])
-    ->name('checklist.preview');
 
 
     // Kanban Board Routes
@@ -411,7 +401,6 @@ Route::get('py', function () {
 
 
 // Remove any duplicate routes and use this:
-//Route::get('/upload-checklist', [ChecklistController::class, 'showUploadForm'])->name('checklist.upload');
 Route::post('/upload-checklist', [ChecklistController::class, 'uploadAndSave'])->name('checklist.upload.save');
 
 // Remove any other checklist routes that might be conflicting
@@ -421,8 +410,10 @@ Route::post('/upload-checklist', [ChecklistController::class, 'uploadAndSave'])-
 Route::post('/checklist/preview', [ChecklistController::class, 'preview'])
      ->name('checklist.preview');
 
+     /* needs delete
 Route::post('/checklist/import/{sheet}', [ChecklistController::class, 'import'])
-     ->name('qa_items.importPdfConfirm');
+     ->name('qa_items.importPdfConfirm');\*/
+
 Route::post('/checklist/upload/save', [ChecklistController::class, 'uploadAndSave'])
     ->name('checklist.upload.save');
 
@@ -485,11 +476,7 @@ Route::get('/mailtest', function () {
     }
 });
 
-// analytics routes for dashboard   
-Route::get('/analytics/qa-trend', [DashboardController::class, 'qaTrend']);
 // Dashboard QA Trend Endpoint
-Route::get('/analytics/qa-trend', [DashboardController::class, 'qaTrend'])
-    ->name('analytics.qa-trend');
 
 
 // Dashboard Phase Progress Endpoint
@@ -533,5 +520,96 @@ Route::get('/test-qa-items', function() {
     
         return dd($items);
 
+
+});
+
+
+
+
+
+
+
+
+/*  the right routes  
+
+
+// 1) Upload checklist (PDF/Excel) - 2-step: preview then save
+Route::get('/upload-checklist', [ChecklistController::class, 'showForm'])
+    ->name('checklist.upload.form');
+
+Route::post('/checklist/preview', [ChecklistController::class, 'preview'])
+    ->name('checklist.preview');
+
+Route::post('/checklist/upload/save', [ChecklistController::class, 'uploadAndSave'])
+    ->name('checklist.upload.save');
+
+// 2) Import PDF to specific sheet (QA Items)
+Route::get('/sheet/{sheet}/qa/import-pdf', [QaItemController::class, 'importPdfForm'])
+    ->name('qa_items.importPdfForm');
+
+Route::post('/sheet/{sheet}/qa/import-pdf-preview', [QaItemController::class, 'importPdfPreview'])
+    ->name('qa_items.importPdfPreview');
+
+Route::post('/sheet/{sheet}/qa/import-pdf-confirm', [QaItemController::class, 'importPdfConfirm'])
+    ->name('qa_items.importPdfConfirm');
+*/
+
+// ======================
+// QA ITEMS (nested تحت Sheet)
+// ======================
+Route::middleware('auth')->group(function () {
+
+    Route::prefix('sheets/{sheet}')->group(function () {
+
+        // CRUD
+        Route::get('qa-items', [QaItemController::class, 'index'])->name('qa_items.index');
+        Route::get('qa-items/create', [QaItemController::class, 'create'])->name('qa_items.create');
+        Route::post('qa-items', [QaItemController::class, 'store'])->name('qa_items.store');
+        Route::get('qa-items/{qaItem}/edit', [QaItemController::class, 'edit'])->name('qa_items.edit');
+        Route::put('qa-items/{qaItem}', [QaItemController::class, 'update'])->name('qa_items.update');
+        Route::delete('qa-items/{qaItem}', [QaItemController::class, 'destroy'])->name('qa_items.destroy');
+
+        // Import from CSV
+        Route::get('qa-items/import', [QaItemController::class, 'importForm'])->name('qa_items.importForm');
+        Route::post('qa-items/import-preview', [QaItemController::class, 'importPreview'])->name('qa_items.importPreview');
+        Route::post('qa-items/import-confirm', [QaItemController::class, 'importConfirm'])->name('qa_items.importConfirm');
+
+        // Verify all items in sheet
+        Route::post('qa-items/verify-all', [QaItemController::class, 'verifyAll'])->name('qa_items.verifyAll');
+
+        // Resolve
+        Route::post('qa-items/{qaItem}/resolve', [QaItemController::class, 'resolve'])->name('qa_items.resolve');
+
+        // Add review
+        Route::post('qa-items/{qaItem}/review', [QaItemController::class, 'addReview'])->name('qa_items.addReview');
+    });
+
+    // Global list & show
+    Route::get('/qa-items/all', [QaItemController::class, 'indexAll'])->name('qa_items.indexAll');
+    Route::get('/qa-items/{qaItem}', [QaItemController::class, 'show'])->name('qa_items.show');
+
+    // Quick status update – SINGLE source of truth
+    Route::patch('/qa-items/{qaItem}/status', [QaItemController::class, 'updateStatus'])
+        ->name('qa_items.status.update');
+
+    // Assign to me
+    Route::post('/qa-items/{qaItem}/assign-to-me', [QaItemController::class, 'assignToMe'])
+        ->name('qa_items.assign-to-me');
+
+    // Reviews update/delete
+    Route::post('qa-item-reviews/{review}/update', [QaItemController::class, 'updateReview'])
+        ->name('qa_items.updateReview');
+    Route::delete('qa-item-reviews/{review}', [QaItemController::class, 'deleteReview'])
+        ->name('qa_items.deleteReview');
+
+    // Verify (restricted roles)
+    Route::middleware(['role:Reviewer,PM'])->group(function () {
+        Route::post('/qa-items/{qaItem}/verify', [QaItemController::class, 'verify'])
+            ->name('qa_items.verify');
+    });
+
+    // for report scheduling
+    Route::get('/settings/reports', [ReportScheduleController::class, 'edit']);
+    Route::post('/settings/reports', [ReportScheduleController::class, 'update']);
 
 });

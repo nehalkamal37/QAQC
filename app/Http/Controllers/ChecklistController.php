@@ -531,6 +531,7 @@ if (!$qaItem) {
                 'assigned_to'   => null,
             ]);
 
+            
             $savedCount++;
         }
 

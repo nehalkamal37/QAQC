@@ -20,33 +20,31 @@ class QAItemController extends Controller
     // ================================
     // LIST WITH FILTERS
     // ================================
-
-    public function index(Request $request, $sheetId)
+public function index(Request $request, $sheetId)
 {
     $sheet = Sheet::findOrFail($sheetId);
-
     $projectId = $sheet->phase->project_id;
 
-    // Build query (DO NOT call ->get() yet)
+    // Important: keep Eloquent Model, not raw row
     $query = \App\Models\QaItem::query()
         ->where('qa_items.sheet_id', $sheetId)
         ->leftJoin('project_qa_item_statuses as p', function ($join) use ($projectId) {
             $join->on('p.qa_item_id', '=', 'qa_items.id')
                 ->where('p.project_id', '=', $projectId);
         })
-        ->select(
-            'qa_items.*',
-            'p.applicable',
-            'p.incorporated',
-            'p.confirmed',
-            'p.comments as project_comments',
-            'p.due_date as project_due_date',
-            'p.assigned_to as project_assigned_to',
-            'p.category',
-            'p.title'
-        );
+        ->selectRaw('
+            qa_items.*,
+            p.applicable,
+            p.incorporated,
+            p.confirmed,
+            p.comments as project_comments,
+            p.due_date as project_due_date,
+            p.assigned_to as project_assigned_to,
+            p.category,
+            p.title
+        ');
 
-    // Apply filters
+    // Filters
     if ($request->assigned_to) {
         $query->where('p.assigned_to', 'LIKE', "%{$request->assigned_to}%");
     }
@@ -59,9 +57,17 @@ class QAItemController extends Controller
         $query->where('qa_items.severity', $request->severity);
     }
 
-    // Load results AFTER filters
-    $items = $query->paginate(15); // Or any number you prefer
-    
+    // Get results as full Eloquent models
+    $items = $query->paginate(15);
+
+    // Inject assigned_to override (IMPORTANT!)
+    $items->getCollection()->transform(function ($item) {
+        // overwrite the assigned_to from project status
+        if ($item->project_assigned_to) {
+            $item->assigned_to = $item->project_assigned_to;
+        }
+        return $item;
+    });
 
     return view('qa_items.index', compact('sheet', 'items', 'projectId'));
 }
@@ -667,151 +673,6 @@ public function preview(Request $request)
 
 
 
-
-// pdf upload 
-/*
-public function importPdfPreview(Request $request, $sheetId)
-{
-    $request->validate([
-        'file' => 'required|mimes:pdf'
-    ]);
-
-    $parser = new Parser();
-    $pdf = $parser->parseFile($request->file('file')->getRealPath());
-    $text = $pdf->getText();
-
-    $lines = preg_split("/\r\n|\n|\r/", $text);
-
-    $previewData = [];
-    $currentSection = '';
-
-    foreach ($lines as $line) {
-
-        // Section detection (ALL CAPS LINE)
-        if (preg_match('/^[A-Z ]+$/', trim($line)) && strlen(trim($line)) > 5) {
-            $currentSection = trim($line);
-            continue;
-        }
-
-        // Normal checklist item (starts with checkbox icon)
-        if (preg_match('/^☐/', trim($line))) {
-            // Remove checkbox symbol
-            $clean = trim(str_replace('☐', '', $line));
-
-            $previewData[] = [
-                'section' => $currentSection,
-                'item' => $clean,
-                'status' => 'open',
-                'notes' => '',
-                'due_date' => '',
-                'assigned_to' => ''
-            ];
-        }
-    }
-
-    $sheet = Sheet::findOrFail($sheetId);
-
-    return view('qa_items.pdf_preview', compact('sheet', 'previewData'));
-}
-*/
-/*
-public function importPdfPreview(Request $request, $sheetId)
-{
-    $request->validate([
-        'file' => 'required|mimes:pdf'
-    ]);
-
-    $pdfPath = $request->file('file')->getRealPath();
-    $outputBase = storage_path('app/pdf_images/page');
-
-    // 1) PDF → PNG
-    $cmd = "\"C:\\poppler\\bin\\pdftoppm.exe\" \"$pdfPath\" \"$outputBase\" -png";
-    exec($cmd);
-
-    // Collect Images
-    $images = glob(storage_path('app/pdf_images/page*.png'));
-
-    $previewData = [];
-
-    foreach ($images as $image) {
-
-        // 2) OCR extract text from PNG
-        $textFile = $image . '.txt';
-        $ocrCmd = "\"C:\\Program Files\\Tesseract-OCR\\tesseract.exe\" \"$image\" \"$textFile\" -l eng";
-        exec($ocrCmd);
-
-        // Tesseract outputs: page-1.png.txt
-        $text = file_get_contents($textFile . '.txt');
-
-        $lines = preg_split("/\r\n|\n|\r/", $text);
-
-        foreach ($lines as $line) {
-
-            // normalize: convert 'x', 'X', '✓' to a checked symbol
-            $normalized = str_replace(['x', 'X', '✓'], '☒', $line);
-
-            if (preg_match('/^(☐|☒)\s+(☐|☒)\s+(☐|☒)\s+(.*)$/u', $normalized, $m)) {
-
-                $box1 = $m[1];
-                $box2 = $m[2];
-                $box3 = $m[3];
-                $item = trim($m[4]);
-
-                if (in_array('☒', [$box1, $box2, $box3])) {
-
-                    $previewData[] = [
-                        'section' => 'Auto-Detected',
-                        'item' => $item,
-                        'status' => 'done'
-                    ];
-                }
-            }
-        }
-    }
-$sheet = Sheet::findOrFail($sheetId);
-return view('qa_items.pdf_preview', compact('sheet', 'previewData'));
-
-}
-
-
-public function importPdfForm($sheetId)
-{
-    $sheet = Sheet::findOrFail($sheetId);
-    return view('qa_items.import_pdf_form', compact('sheet'));
-}
-
-
-public function importPdfConfirm(Request $request, $sheetId)
-{
-    
-    if (!$request->has('items') || !is_array($request->items)) {
-        return back()->with('error', 'No items were received from PDF preview. Please retry the import.');
-    }
-
-    foreach ($request->items as $item) {
-
-        // Skipping empty rows
-        if (empty($item['item']) && empty($item['section'])) {
-            continue;
-        }
-
-        QaItem::create([
-            'sheet_id' => $sheetId,
-            'item_description' => $item['item'] ?? 'Untitled Item',
-            'comments' => $item['section'] ?? '',
-            'status' => $item['status'] ?? 'open',
-            'due_date' => null,
-            'assigned_to' => null,
-            'severity' => 'medium',
-        ]);
-    }
-
-    return redirect()
-        ->route('qa_items.index', $sheetId)
-        ->with('success', 'PDF QA Items imported successfully.');
-}
-
-*/
 
 
     /* ============================================================

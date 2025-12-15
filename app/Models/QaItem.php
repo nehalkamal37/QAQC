@@ -151,6 +151,19 @@ public function attachments()
         };
     }
 
+    
+public function getAssignedToAttribute($value)
+{
+    // لو جاي من join كـ project_assigned_to نرجّحه
+    if (array_key_exists('project_assigned_to', $this->attributes) 
+        && $this->attributes['project_assigned_to']) {
+
+        return $this->attributes['project_assigned_to'];
+    }
+
+    // otherwise return original assigned_to
+    return $value;
+}
 
     
 

@@ -27,18 +27,24 @@ class TimelineController extends Controller
 
   //  $logs = ActivityLog::with(['user','project','phase','sheet','item'])
 $logs = ActivityLog::query()
-    ->with(['user','project','phase','sheet','item'])
     ->leftJoin('project_qa_item_statuses as pq', function ($j) {
         $j->on('pq.qa_item_id', '=', 'activity_logs.qa_item_id')
           ->on('pq.project_id', '=', 'activity_logs.project_id');
     })
     ->select('activity_logs.*')
+    ->with(['user','project','phase','sheet','item'])
+
 
 // ...
+
+
 ->when($assignedTo, function($q) use ($assignedTo) {
     $q->where(function($w) use ($assignedTo) {
-        $w->whereRaw("JSON_EXTRACT(activity_logs.new_value, '$.assigned_to') = ?", [json_encode((string)$assignedTo)])
-          ->orWhere('pq.assigned_to', (string)$assignedTo);
+        $w->whereRaw(
+            "JSON_UNQUOTE(JSON_EXTRACT(activity_logs.new_value, '$.assigned_to')) = ?",
+            [$assignedTo]
+        )
+        ->orWhere('pq.assigned_to', $assignedTo);
     });
 })
 
