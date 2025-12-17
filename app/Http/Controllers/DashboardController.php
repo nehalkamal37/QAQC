@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+
   public function index()
 {
     // Load status table
@@ -611,6 +612,7 @@ public function sheetStatusHeatmap(Request $request)
         $sheetsQuery->where('phase_id', $phaseId);
     }
 
+   
     $sheets = $sheetsQuery->get();
 
     $rows = $sheets->map(function ($sheet) use ($statuses) {
@@ -1055,6 +1057,8 @@ public function phaseBurndown(Request $request)
         'total'     => $totalItems
     ]);
 }
+
+
 public function getQaItems(Request $req)
 {
     $sheetId = $req->sheet_id;

@@ -104,9 +104,11 @@
     </select>
 
     <!-- NEW: PHASE FILTER -->
+     
     <select id="heatmapPhaseFilter" class="form-select form-select-sm" style="width:200px;">
         <option value="">All Phases</option>
         {{-- سيتم ملؤها ديناميكياً من الجافاسكربت --}}
+
     </select>
 
 </div>
@@ -957,7 +959,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const phaseId = select.value;
             if (!phaseId) return;
 
-            fetch(`/analytics/phase-burndown?phase_id=${phaseId}`)
+           fetch(`/analytics/phase-burndown?phase_id=${phaseId}`)      
+
                 .then(r => r.json())
                 .then(data => {
 
@@ -1689,11 +1692,58 @@ function adjustModalHeight() {
     }
 }
 
+
+
 // Handle window resize
 window.addEventListener('resize', adjustModalHeight);
 
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const projectSelect = document.getElementById("heatmapProjectFilter");
+    const phaseSelect   = document.getElementById("heatmapPhaseFilter");
+
+    // =====================
+    // LOAD PHASES
+    // =====================
+    function loadPhases(projectId) {
+        phaseSelect.innerHTML = `<option value="">All Phases</option>`;
+
+        if (!projectId) return;
+
+        fetch(`/phases/by-project/${projectId}`)
+            .then(res => res.json())
+            .then(phases => {
+                phases.forEach(phase => {
+                    const opt = document.createElement("option");
+                    opt.value = phase.id;
+                    opt.textContent = phase.type;
+                    phaseSelect.appendChild(opt);
+                });
+            });
+    }
+
+    // =====================
+    // EVENTS
+    // =====================
+    projectSelect.addEventListener("change", function () {
+        loadPhases(this.value);
+        loadHeatmap();
+    });
+
+    phaseSelect.addEventListener("change", function () {
+        loadHeatmap();
+    });
+
+    // =====================
+    // INITIAL LOAD
+    // =====================
+    loadHeatmap();
+
+});
+</script>
 
 
 
