@@ -153,6 +153,14 @@
                 </div>
             </div>
 -->
+             <div class="mt-3">
+                <strong class="small">Declare:</strong>
+                <div class="d-flex align-items-center gap-3 small mt-1">
+                    <span>A --> Applicable</span> 
+                    <span>I --> Inapplicable</span>
+                    <span>C --> Compliant</span>
+                </div>
+            </div>
         </div>
     </div>
 

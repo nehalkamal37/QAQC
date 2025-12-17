@@ -27,6 +27,8 @@ class SendWeeklyReport extends Command
         $this->info('Weekly report sent successfully.');
     }
 */
+
+
 public function handle()
 {
     $schedule = ReportSchedule::where('type', 'weekly')
@@ -42,7 +44,7 @@ public function handle()
     if (! $cron->isDue()) {
         return; // Not time yet
     }
-$report = app(WeeklyReportService::class)->generate();
+        $report = app(WeeklyReportService::class)->generate();
 
     // 👇 هنا بس نبعت التقرير
     Mail::to('nehalk751@gmail.com')->send(

@@ -18,6 +18,9 @@ use App\Http\Controllers\PhaseKanbanController;
 use App\Http\Controllers\ReportScheduleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Models\Project;
+use App\Models\Phase;
+use App\Http\Controllers\WeeklyReportController;
 // ======================
 // Auth routes
 // ======================
@@ -609,7 +612,13 @@ Route::middleware('auth')->group(function () {
     });
 
     // for report scheduling
-    Route::get('/settings/reports', [ReportScheduleController::class, 'edit']);
+    Route::get('/settings/reports', [ReportScheduleController::class, 'edit'])->name('settings.reports.edit');
     Route::post('/settings/reports', [ReportScheduleController::class, 'update']);
+
+
+    // for pdf/csv report download
+    Route::get('/reports/weekly', [WeeklyReportController::class, 'show'])->name('reports.weekly');
+Route::get('/reports/weekly/pdf', [WeeklyReportController::class, 'pdf']);
+Route::get('/reports/weekly/csv', [WeeklyReportController::class, 'csv']);
 
 });

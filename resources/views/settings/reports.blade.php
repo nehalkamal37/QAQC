@@ -47,11 +47,13 @@
 
 <style>
 .report-schedule-form {
-    max-width: 420px;
+    max-width: 600px;
     background: #ffffff;
     padding: 20px;
     border-radius: 10px;
     border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-left: 155px;
 }
 
 .form-group {

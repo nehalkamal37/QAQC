@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\QaItem;
+use App\Models\ActivityLog;
+use App\Observers\ActivityLogObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,7 +37,11 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('assignedCount', 0);
             }
         });
-    
+        
+        ActivityLog::observe(ActivityLogObserver::class);
+
 }
+
+
 
 }

@@ -26,7 +26,7 @@ class NotificationService
 
     //new
     
-
+/*
 public static function send($userId, $type, $title, $message, $data = null)
 {
     // Save notification in DB
@@ -48,13 +48,50 @@ public static function send($userId, $type, $title, $message, $data = null)
     $title,
     "<p>$message</p>"
 );
-/*
-        Mail::to($user->email)->send(
-            new UserNotificationMail($title, $message)
-        );
-        */
+
+    //    Mail::to($user->email)->send(
+      //      new UserNotificationMail($title, $message)   );
+        
     }
         
+
+    return $notification;
+}
+
+*/
+
+
+public static function send(
+    int $userId,
+    string $type,
+    string $title,
+    string $message,
+    array $data = [],
+    ?int $actorId = null,
+    ?string $subjectType = null,
+    ?int $subjectId = null
+) {
+    $notification = Notification::create([
+        'user_id'      => $userId,
+        'actor_id'     => $actorId,
+        'type'         => $type,
+        'title'        => $title,
+        'message'      => $message,
+        'data'         => $data,
+        'subject_type' => $subjectType,
+        'subject_id'   => $subjectId,
+        'is_read'      => false,
+    ]);
+
+    // Email (unchanged)
+    $user = User::find($userId);
+    if ($user && $user->email) {
+        BrevoMailService::send(
+            $user->email,
+            $title,
+            "<p>$message</p>"
+        );
+    }
 
     return $notification;
 }
@@ -83,6 +120,7 @@ public static function send($userId, $type, $title, $message, $data = null)
 
     // Specific notification types
 
+
 public static function notifyAssignment($userId, $projectName, $role, $assignedBy)
 {
     return self::send(
@@ -93,7 +131,7 @@ public static function notifyAssignment($userId, $projectName, $role, $assignedB
         ['assigned_by' => $assignedBy, 'type' => 'assignment']
     );
 }
-
+/*
     public static function notifyQaItemAssigned1($userId, $itemId, $projectName)
     {
         return self::send(
@@ -101,7 +139,7 @@ public static function notifyAssignment($userId, $projectName, $role, $assignedB
             'qa_item_assigned',
             'QA Item Assigned',
             "A new QA item has been assigned to you in project: {$projectName}",
-            ['qa_item_id' => $itemId, 'type' => 'qa_item_assigned']
+            ['qa_item_id' => $itemId, 'type' => 'qa_item_assigned']  
         );
 
     }
@@ -139,7 +177,6 @@ public static function notifyAssignment($userId, $projectName, $role, $assignedB
             ['qa_item_id' => $itemId, 'days_until_due' => $daysUntilDue]
         );
     }
-*/
 
 public static function notifyDueDateReminder($userId, $itemId, $daysUntilDue)
 {
@@ -170,6 +207,35 @@ public static function notifyDueDateReminder($userId, $itemId, $daysUntilDue)
         ['qa_item_id' => $itemId, 'days_until_due' => $daysUntilDue]
     );
 }
+*/
 
+
+
+/// new enhanced algorithm
+
+
+/*
+public static function notifyStatusChange(
+    int $recipientId,
+    int $actorId,
+    int $qaItemId,
+    string $oldStatus,
+    string $newStatus
+) {
+    return self::send(
+        userId: $recipientId,
+        type: 'status_change',
+        title: 'QA Item Status Updated',
+        message: "changed QA item #{$qaItemId} status from {$oldStatus} to {$newStatus}",
+        data: [
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+        ],
+        actorId: $actorId,
+        subjectType: 'QAItem',
+        subjectId: $qaItemId
+    );
+}
+*/
 
 }

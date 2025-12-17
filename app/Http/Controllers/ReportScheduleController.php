@@ -9,11 +9,14 @@ class ReportScheduleController extends Controller
 {
 
     public function edit(){
+
     $schedule =ReportSchedule::first();  // get the first schedule
     return view('settings.reports',compact('schedule'));
+
     }
 
-    public function update(Request $request){
+    public function update(Request $request){  // this method will handle the form submission
+                                                 // its only save to database
 
 
 $day = $request->day === 'all' ? '*' : $request->day;

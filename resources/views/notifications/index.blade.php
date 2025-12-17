@@ -32,11 +32,21 @@
         {{ $notification->title }}
     </h6>
 
-    {{-- الرسالة الأساسية --}}
-    <p class="mb-1">{{ $notification->message }}</p>
 
+    <p class="mb-1">
+    @if($notification->actor)
+        <strong>{{ $notification->actor->name }}</strong>
+    @else
+        <strong>System</strong>
+    @endif
+    {{ 'has '.  $notification->message }}
+</p>
+
+    {{-- الرسالة الأساسية 
+    <p class="mb-1">{{ $notification->message }}</p>
+--}}
     {{-- لو النوتيفيكشن مرتبطة بـ QA Item --}}
-    @if(isset($notification->data['qa_item_id']) && $notification->qa_item_link)
+    @if(isset($notification->data['qa_item_id'] )  && $notification->qa_item_link)
         <p class="mb-1">
             <a href="{{ $notification->qa_item_link }}" class="text-decoration-underline">
                 View QA Item #{{ $notification->data['qa_item_id'] }}

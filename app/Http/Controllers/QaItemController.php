@@ -14,6 +14,7 @@ use App\Services\NotificationService;
 use App\Models\ProjectQAItemStatus;
 use App\Models\User;
 use Illuminate\Support\Arr;
+use App\Models\ActivityLog;
 
 class QAItemController extends Controller
 {
@@ -268,28 +269,64 @@ public function update(Request $request, $sheetId, $id)
 
     // A) Assigned_to Changed → Send Assignment Notification
     if ($oldAssigned != $request->project_assigned_to && $request->project_assigned_to) {
-        NotificationService::notifyQaItemAssigned(
+     
+   $log= ActivityLog::create([
+        'user_id'     => auth()->id(), // actor
+        'action_type' => 'qa_item_assigned',
+        'project_id'  => $projectId,
+        'qa_item_id'  => $qaItem->id,
+        'old_value'   => [
+            'assigned_to' => $oldAssigned,
+        ],
+        'new_value'   => [
+            'assigned_to' => $request->project_assigned_to,
+        ],
+    ]);
+
+logger()->info('Activity created', ['id' => $log->id, 'action' => $log->action_type]);
+
+     /*   NotificationService::notifyQaItemAssigned(
             $request->project_assigned_to,
             $qaItem->id,
             $qaItem->sheet->phase->project->name
         );
+        */
     }
 
     // B) Due Date change → send reminder
-    if ($oldDue != $request->project_due_date && $request->project_due_date &&
-     $request->assigned_to != null    ) {
+if (
+    $oldDue != $request->project_due_date &&
+    $request->project_due_date &&
+    $request->project_assigned_to
+){
 
         $dueDate = \Carbon\Carbon::parse($request->project_due_date);
         $today   = now();
 
         $daysUntilDue = $today->diffInDays($dueDate, false);
 
-        NotificationService::notifyDueDateReminder(
+    ActivityLog::create([
+        'user_id'     => auth()->id(), // actor
+        'action_type' => 'due_date_changed',
+        'project_id'  => $projectId,
+        'qa_item_id'  => $qaItem->id,
+        'old_value'   => [
+            'due_date' => $oldDue,
+        ],
+        'new_value'   => [
+            'due_date' => $request->project_due_date,
+        ],
+    ]);
+
+
+      /*  NotificationService::notifyDueDateReminder(
             $request->project_assigned_to,
             $qaItem->id,
             $daysUntilDue
-        );
+        );*/
     }
+// B) Due Date Changed → Log Activity ONLY
+
 
     // .. باقي الريدايركت / الفلاش ميسيدج
 

@@ -126,7 +126,19 @@
 --}}
 
 
+<li class="sidebar-item {{ request()->routeIs('settings.reports.edit') ? 'active' : '' }}">
+    <a class="sidebar-link" href="{{ route('settings.reports.edit') }}">
+        <i class="align-middle" data-feather="user"></i> <span class="align-middle">emails settings</span>
+    </a>
+</li>
 
+
+
+<li class="sidebar-item {{ request()->routeIs('reports.weekly') ? 'active' : '' }}">
+    <a class="sidebar-link" href="{{ route('reports.weekly') }}">
+        <i class="align-middle" data-feather="user"></i> <span class="align-middle">reports</span>
+    </a>
+</li>
 
 					@guest
     <li class="sidebar-item">

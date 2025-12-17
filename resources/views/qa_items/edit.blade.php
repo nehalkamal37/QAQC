@@ -25,7 +25,7 @@
                     <input type="text"
                         name="title"
                         class="form-control"
-                        value="{{ old('title', $projectStatus->title)  }}"
+                        value="{{ old('title', $projectStatus->title ?? '') }}"
                         required>   
                 </div>
 
@@ -34,7 +34,7 @@
                     <input type="text"                          
                         name="category"
                         class="form-control"
-                        value="{{ old('category', $projectStatus->category) }}"
+                        value="{{ old('category', $projectStatus->category ?? '') }}"
                         required>
                 </div>
 
