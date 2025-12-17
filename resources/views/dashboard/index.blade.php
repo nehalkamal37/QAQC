@@ -103,12 +103,12 @@
         @endforeach
     </select>
 
-    <!-- NEW: PHASE FILTER -->
+    <!-- NEW: PHASE FILTER 
     <select id="heatmapPhaseFilter" class="form-select form-select-sm" style="width:200px;">
         <option value="">All Phases</option>
         {{-- سيتم ملؤها ديناميكياً من الجافاسكربت --}}
     </select>
-
+-->
 </div>
 
         </div>
