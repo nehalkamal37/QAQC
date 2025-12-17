@@ -20,8 +20,9 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
 
-            <table class="table table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
@@ -116,9 +117,74 @@
                 </tbody>
 
             </table>
+            </div>
 
         </div>
     </div>
 
 </div>
+
+<style>
+    /* ================================= */
+/* PHASES TABLE – MOBILE RESPONSIVE */
+/* ================================= */
+
+@media (max-width: 768px) {
+
+  /* Header stack */
+  .container-fluid > .d-flex:first-child {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+
+  .container-fluid h1 {
+    font-size: 1.25rem;
+  }
+
+  /* Table tweaks */
+  table {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    vertical-align: middle;
+  }
+
+  /* Make actions buttons wrap nicely */
+  td:last-child {
+    min-width: 180px;
+  }
+
+  td:last-child .btn {
+    margin-bottom: 4px;
+  }
+}
+/* ================================= */
+/* PHASES TABLE – EXTRA SMALL PHONES */
+/* ================================= */
+
+@media (max-width: 576px) {
+
+
+  /* Status select full width */
+  select.form-select-sm {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  /* Actions stack vertically */
+  td:last-child {
+    white-space: normal;
+  }
+
+  td:last-child .btn {
+    display: block;
+    width: 100%;
+  }
+}
+
+    </style>
 @endsection

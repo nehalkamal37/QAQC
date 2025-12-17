@@ -24,6 +24,9 @@ Schedule::command('report:weekly')
     ->everyMinute(); // Laravel checks every minute
 
 
+Schedule::command('report:monthly')
+    ->everyMinute(); // Laravel checks every minute
+
   // Schedule::command('report:weekly')->cron('0 10 * * 5');
    // ->weeklyOn(5, '10:00'); // كل جمعة الساعة 10
 

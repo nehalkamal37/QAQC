@@ -6,7 +6,8 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body">
-            <table class="table table-striped align-middle">
+<div class="table-responsive all-sheets-table-wrapper">
+    <table class="table table-striped align-middle all-sheets-table">
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
@@ -38,8 +39,52 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
             {{ $sheets->links() }}
         </div>
     </div>
 </div>
+<style>
+/* ================================= */
+/* ALL SHEETS – RESPONSIVE TABLE */
+/* ================================= */
+
+@media (max-width: 768px) {
+
+  /* Page title */
+  .container-fluid h1 {
+    font-size: 1.25rem;
+  }
+
+  /* Table behavior */
+  .all-sheets-table {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .all-sheets-table th,
+  .all-sheets-table td {
+    padding: 8px 10px;
+    vertical-align: middle;
+  }
+}
+/* ================================= */
+/* PAGINATION – MOBILE FIX */
+/* ================================= */
+
+@media (max-width: 576px) {
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .pagination .page-link {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+    </style>
 @endsection

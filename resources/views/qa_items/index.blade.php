@@ -511,4 +511,89 @@
     </div>
 </div>
 
+<style> 
+/* ============================= */
+/* QA ITEMS HEADER – MOBILE */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .container-fluid > .d-flex:first-child {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .container-fluid h1 {
+    font-size: 1.4rem;
+  }
+
+  .container-fluid .d-flex.gap-2 {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .container-fluid .d-flex.gap-2 .btn {
+    width: 100%;
+  }
+}
+
+/* ============================= */
+/* FILTERS – MOBILE */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .card-body .row.g-3 > div {
+    width: 100%;
+  }
+
+  .card-body label {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  table {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+}
+@media (max-width: 576px) {
+
+  td[style*="min-width: 150px"] {
+    min-width: auto !important;
+  }
+
+  td .d-flex.align-items-center.gap-2 {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  td .d-flex.justify-content-between.small {
+    gap: 6px;
+  }
+}
+/* ============================= */
+/* ACTION BUTTONS – MOBILE */
+/* ============================= */
+@media (max-width: 576px) {
+
+  td.text-center .d-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  td.text-center .btn {
+    width: 100%;
+    font-size: 12px;
+  }
+}
+
+
+</style>
+
 @endsection

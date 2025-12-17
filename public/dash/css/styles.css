@@ -1064,3 +1064,125 @@
     color: #64748b;
     font-size: 0.9rem;
 }
+
+
+/* responsive tweaks for smaller screens */
+
+/* ============================= */
+/* HEATMAP HEADER – MOBILE FIX */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .card-header > div:last-child {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card-header select {
+    width: 100% !important;
+  }
+}
+
+/* ============================= */
+/* HEATMAP TABLE – MOBILE FIX */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .heatmap-table {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .heatmap-table th,
+  .heatmap-table td {
+    padding: 6px 8px;
+  }
+
+  .heatmap-table th:first-child,
+  .heatmap-table td:first-child {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 2;
+  }
+
+  .heatmap-table thead th:first-child {
+    z-index: 3;
+  }
+}
+
+/* ============================= */
+/* HIDE LOW-PRIORITY COLUMNS */
+/* ============================= */
+@media (max-width: 576px) {
+
+  /* Hide detailed status columns */
+  .heatmap-table th:nth-child(4),
+  .heatmap-table td:nth-child(4),
+  .heatmap-table th:nth-child(5),
+  .heatmap-table td:nth-child(5),
+  .heatmap-table th:nth-child(6),
+  .heatmap-table td:nth-child(6),
+  .heatmap-table th:nth-child(7),
+  .heatmap-table td:nth-child(7) {
+    display: none;
+  }
+}
+
+/* ============================= */
+/* QA POPUP MODAL – MOBILE FIX */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .qa-popup-modal {
+    width: 95%;
+    height: 85vh;
+    border-radius: 10px;
+  }
+
+  .qa-popup-header {
+    padding: 12px 16px;
+  }
+
+  .qa-popup-body {
+    padding: 12px;
+  }
+
+  .qa-popup-items table {
+    font-size: 12px;
+  }
+
+  .qa-popup-items th,
+  .qa-popup-items td {
+    white-space: nowrap;
+  }
+}
+
+/* ============================= */
+/* DASHBOARD GENERAL MOBILE FIX */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .dashboard-container {
+    padding: 12px !important;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .section-header select {
+    width: 100% !important;
+  }
+}
+

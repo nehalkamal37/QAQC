@@ -82,7 +82,7 @@
     <div class="card shadow-sm h-100">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
-                <h5 class="fw-bold mb-0">🗺️ Sheet × Status Heatmap</h5>
+                <h5 class="fw-bold mb-0"> Sheet × Status Heatmap</h5>
                 <small class="text-muted">Per-sheet QA distribution — based on A/I/C project status</small>
             </div>
 {{--

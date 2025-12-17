@@ -622,3 +622,12 @@ Route::get('/reports/weekly/pdf', [WeeklyReportController::class, 'pdf']);
 Route::get('/reports/weekly/csv', [WeeklyReportController::class, 'csv']);
 
 });
+
+
+Route::fallback(function () {
+    if (auth()->check()) {
+        return redirect()->route('home');
+    }
+
+    return redirect()->route('login');
+});

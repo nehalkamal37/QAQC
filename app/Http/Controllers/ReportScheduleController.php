@@ -15,7 +15,7 @@ class ReportScheduleController extends Controller
 
     }
 
-    public function update(Request $request){  // this method will handle the form submission
+    public function update1(Request $request){  // this method will handle the form submission
                                                  // its only save to database
 
 
@@ -38,4 +38,55 @@ ReportSchedule::updateOrCreate(
 
     return back()->with('success', 'Schedule updated');
     }
+
+public function update(Request $request)
+{
+    $request->validate([
+        'schedule_type' => 'required|in:weekly,monthly',
+        'hour' => 'required|integer|min:0|max:23',
+        'minute' => 'required|integer|min:0|max:59',
+    ]);
+
+    $type = $request->schedule_type;
+
+    if ($type === 'weekly') {
+
+        $request->validate([
+            'day' => 'required|integer|min:0|max:6',
+        ]);
+
+        // minute hour * * day_of_week
+        $cron = sprintf(
+            '%d %d * * %d',
+            $request->minute,
+            $request->hour,
+            $request->day
+        );
+
+    } else { // monthly
+
+        $request->validate([
+            'month_day' => 'required|integer|min:1|max:31',
+        ]);
+
+        // minute hour day_of_month * *
+        $cron = sprintf(
+            '%d %d %d * *',
+            $request->minute,
+            $request->hour,
+            $request->month_day
+        );
+    }
+
+    ReportSchedule::updateOrCreate(
+        ['type' => $type],
+        [
+            'cron_expression' => $cron,
+            'enabled' => true,
+        ]
+    );
+
+    return back()->with('success', 'Schedule updated successfully');
+}
+
 }

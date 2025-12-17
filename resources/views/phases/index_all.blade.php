@@ -3,7 +3,8 @@
 @section('content')
 <div class="container-fluid px-4 mt-4">
     <h1 class="h3 mb-4">All Phases</h1>
-    <table class="table table-striped align-middle">
+<div class="table-responsive all-phases-table-wrapper">
+    <table class="table table-striped align-middle all-phases-table">
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
@@ -25,7 +26,51 @@
             @endforeach
         </tbody>
     </table>
-
+</div>
     {{ $phases->links() }}
 </div>
+
+<style>
+    /* ================================= */
+/* ALL PHASES – RESPONSIVE TABLE */
+/* ================================= */
+
+@media (max-width: 768px) {
+
+  /* Page title */
+  .container-fluid h1 {
+    font-size: 1.25rem;
+  }
+
+  /* Table behavior */
+  .all-phases-table {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .all-phases-table th,
+  .all-phases-table td {
+    padding: 8px 10px;
+    vertical-align: middle;
+  }
+}
+/* ================================= */
+/* PAGINATION – MOBILE FIX */
+/* ================================= */
+
+@media (max-width: 576px) {
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .pagination .page-link {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+    </style>
 @endsection

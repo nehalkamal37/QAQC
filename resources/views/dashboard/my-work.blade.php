@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 
-<!-- Add this toast for actions -->
+<!-- Add this toast for actions -
 <div class="toast position-fixed top-0 end-0 m-3" id="actionToast" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="toast-header">
         <i class="fas fa-info-circle text-primary me-2"></i>
@@ -342,3 +342,62 @@ document.addEventListener('DOMContentLoaded', function() {
         Action completed successfully.
     </div>
 </div>
+-->
+<style>
+/* ============================= */
+/* MY WORK HEADER – MOBILE */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .container-fluid > .d-flex.py-4 {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .container-fluid h1 {
+    font-size: 1.4rem;
+  }
+
+  .container-fluid .h4 {
+    font-size: 1.25rem;
+  }
+}
+/* ============================= */
+/* QUICK STATS – MOBILE */
+/* ============================= */
+@media (max-width: 576px) {
+
+  .row.mb-4 .card-body {
+    padding: 0.75rem;
+  }
+
+  .text-xs {
+    font-size: 10px;
+  }
+
+  .row.mb-4 .h5 {
+    font-size: 1.1rem;
+  }
+}
+/* ============================= */
+/* FILTER BAR – MOBILE */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .card-header form {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .card-header select,
+  .card-header .btn {
+    width: 100% !important;
+  }
+
+  .card-header small {
+    display: none; /* hide "Filter:" label */
+  }
+}
+
+    </style>

@@ -19,7 +19,8 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <table class="table table-striped align-middle">
+<div class="table-responsive sheets-table-wrapper">
+    <table class="table table-striped align-middle sheets-table">
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
@@ -170,7 +171,77 @@
                 </tbody>
 
             </table>
+            </div>
         </div>
     </div>
 </div>
+<style>
+/* ================================= */
+/* SHEETS TABLE – RESPONSIVE FIX */
+/* ================================= */
+
+@media (max-width: 768px) {
+
+  /* Header stack */
+  .container-fluid > .d-flex:first-child {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+
+  .container-fluid h1 {
+    font-size: 1.25rem;
+  }
+
+  /* Table sizing */
+  .sheets-table {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .sheets-table th,
+  .sheets-table td {
+    padding: 8px;
+    vertical-align: top;
+  }
+
+  /* Attachments column */
+  .sheets-table td:nth-child(8) {
+    min-width: 220px;
+  }
+
+  /* Action buttons */
+  .sheets-table td:last-child {
+    min-width: 160px;
+  }
+
+  .sheets-table td:last-child .btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+  }
+}
+/* ================================= */
+/* ATTACHMENTS – MOBILE UX */
+/* ================================= */
+
+@media (max-width: 576px) {
+
+  .sheets-table td:nth-child(8) .d-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .sheets-table td:nth-child(8) a {
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .sheets-table td:nth-child(8) form {
+    align-self: flex-end;
+  }
+}
+
+    </style>
 @endsection

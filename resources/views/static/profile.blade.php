@@ -76,4 +76,75 @@
 
     </div>
 </main>
+
+<style>
+    /* ============================= */
+/* PROFILE HEADER – MOBILE */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .content h1.h3 {
+    font-size: 1.4rem;
+  }
+
+  .content .mb-3 {
+    margin-bottom: 1rem !important;
+  }
+}
+/* ============================= */
+/* PROFILE CARD – MOBILE */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .card-body.text-center img {
+    width: 96px !important;
+    height: 96px !important;
+  }
+
+  .card-body.text-center h5 {
+    font-size: 1.1rem;
+  }
+
+  .card-body.text-center .badge {
+    font-size: 12px;
+    word-break: break-all;
+  }
+}
+/* ============================= */
+/* PROFILE LAYOUT – MOBILE */
+/* ============================= */
+@media (max-width: 768px) {
+
+  .row > [class*="col-"] {
+    margin-bottom: 1rem;
+  }
+}
+/* ============================= */
+/* ACCOUNT INFO – MOBILE */
+/* ============================= */
+@media (max-width: 576px) {
+
+  .card-body ul li {
+    font-size: 13px;
+  }
+
+  .card-body ul li span {
+    margin-right: 6px;
+  }
+}
+/* ============================= */
+/* ACTIVITY CARD – MOBILE */
+/* ============================= */
+@media (max-width: 576px) {
+
+  .card-header h5 {
+    font-size: 1rem;
+  }
+
+  .card-body p {
+    font-size: 13px;
+  }
+}
+
+</style>
 @endsection
