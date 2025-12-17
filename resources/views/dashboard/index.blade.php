@@ -26,7 +26,8 @@
 
         <select id="projectProgressFilter" class="form-select form-select-sm" style="width:200px;">
             <option value="">All Projects</option>
-            @foreach($projects as $proj)
+            @foreach($projects ?? [] as $proj)
+
                 <option value="{{ $proj->id }}">{{ $proj->name }}</option>
             @endforeach
         </select>
@@ -43,35 +44,6 @@
 </div>
 
 
-{{--
-<div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-            <h5 class="fw-bold mb-0"> Phase Burn-Down Chart</h5>
-            <small class="text-muted">Remaining QA items per day — toward Signoff</small>
-        </div>
-
-        <div class="d-flex">
-            <select id="burndownPhaseFilter" class="form-select form-select-sm" style="width: 200px;">
-                <option value="">Select Phase</option>
-                @foreach($projects as $proj)
-                    @foreach($proj->phases as $ph)
-                        <option value="{{ $ph->id }}">
-                            {{ $proj->name }} — {{ $ph->type }}
-                        </option>
-                    @endforeach
-                @endforeach
-            </select>
-        </div>
-    </div>
-
-    <div class="card-body">
-        <canvas id="phaseBurndownChart" height="120"></canvas>
-    </div>
-</div>
-
---}}
-
 
 {{-- Sheet Heatmap + SLA Analytics --}}
 
@@ -85,20 +57,14 @@
                 <h5 class="fw-bold mb-0"> Sheet × Status Heatmap</h5>
                 <small class="text-muted">Per-sheet QA distribution — based on A/I/C project status</small>
             </div>
-{{--
-            <select id="heatmapProjectFilter" class="form-select form-select-sm" style="width:200px;">
-                <option value="">All Projects</option>
-                @foreach($projects as $proj)
-                    <option value="{{ $proj->id }}">{{ $proj->name }}</option>
-                @endforeach
-            </select>  --}}
+
 
             <div class="d-flex gap-2">
 
     <!-- PROJECT FILTER -->
     <select id="heatmapProjectFilter" class="form-select form-select-sm" style="width:200px;">
         <option value="">All Projects</option>
-        @foreach($projects as $proj)
+@foreach($projects ?? [] as $proj)
             <option value="{{ $proj->id }}">{{ $proj->name }}</option>
         @endforeach
     </select>
@@ -145,16 +111,7 @@
                     </tbody>
                 </table>
             </div>
-<!--
-            <div class="mt-3">
-                <strong class="small">Legend:</strong>
-                <div class="d-flex align-items-center gap-3 small mt-1">
-                    <span><span class="legend-box" style="background:rgba(220,53,69,0.2)"></span> Low</span>
-                    <span><span class="legend-box" style="background:rgba(220,53,69,0.5)"></span> Medium</span>
-                    <span><span class="legend-box" style="background:rgba(220,53,69,0.8)"></span> High</span>
-                </div>
-            </div>
--->
+
              <div class="mt-3">
                 <strong class="small">Declare:</strong>
                 <div class="d-flex align-items-center gap-3 small mt-1">
@@ -601,7 +558,8 @@
                             <div class="status-indicator"></div>
                             <div class="status-content">
                                 <div class="status-title">Open Items</div>
-                                <div class="status-value">{{ $data['qa_open'] }}</div>
+<div class="status-value">{{ $data['qa_open'] ?? 0 }}</div>
+
                             </div>
                         </div>
                     </div>
@@ -610,7 +568,7 @@
                             <div class="status-indicator"></div>
                             <div class="status-content">
                                 <div class="status-title">Pending Items</div>
-                                <div class="status-value">{{ $data['qa_pending'] }}</div>
+                                <div class="status-value">{{ $data['qa_pending'] ?? '' }}</div>
                             </div>
                         </div>
                     </div>
@@ -619,7 +577,7 @@
                             <div class="status-indicator"></div>
                             <div class="status-content">
                                 <div class="status-title">Resolved Items</div>
-                                <div class="status-value">{{ $data['qa_resolved'] }}</div>
+                                <div class="status-value">{{ $data['qa_resolved'] ?? 0 }}</div>
                             </div>
                         </div>
                     </div>
@@ -628,7 +586,7 @@
                             <div class="status-indicator"></div>
                             <div class="status-content">
                                 <div class="status-title">Closed Items</div>
-                                <div class="status-value">{{ $data['qa_closed'] }}</div>
+                                <div class="status-value">{{ $data['qa_closed'] ?? 0 }}</div>
                             </div>
                         </div>
                     </div>
@@ -652,7 +610,7 @@
                                 </div>
                                 <div class="severity-content">
                                     <div class="severity-title">Critical</div>
-                                    <div class="severity-value">{{ $data['qa_critical'] }}</div>
+                                    <div class="severity-value">{{ $data['qa_critical'] ?? 0 }}</div>
                                 </div>
                             </div>
                         </a>
@@ -665,7 +623,7 @@
                                 </div>
                                 <div class="severity-content">
                                     <div class="severity-title">High</div>
-                                    <div class="severity-value">{{ $data['qa_high'] }}</div>
+                                    <div class="severity-value">{{ $data['qa_high'] ?? 0 }} </div>
                                 </div>
                             </div>
                         </a>
@@ -678,7 +636,7 @@
                                 </div>
                                 <div class="severity-content">
                                     <div class="severity-title">Medium</div>
-                                    <div class="severity-value">{{ $data['qa_medium'] }}</div>
+                                    <div class="severity-value">{{ $data['qa_medium'] ?? 0 }}</div>
                                 </div>
                             </div>
                         </a>
@@ -691,7 +649,7 @@
                                 </div>
                                 <div class="severity-content">
                                     <div class="severity-title">Low</div>
-                                    <div class="severity-value">{{ $data['qa_low'] }}</div>
+                                    <div class="severity-value">{{ $data['qa_low'] ?? 0 }}</div>
                                 </div>
                             </div>
                         </a>
@@ -795,161 +753,7 @@
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    // =========================
-    // 1) SHEET × STATUS HEATMAP
-    // =========================
- 
-
-
-    // =========================
-    // 2) SLA / OVERDUE ANALYTICS
-    // =========================
-    fetch("{{ route('analytics.sla') }}")
-        .then(res => res.json())
-        .then(data => {
-
-            document.getElementById('slaActiveCount').textContent  = data.total_active ?? 0;
-            document.getElementById('slaOverdueCount').textContent = data.overdue_count ?? 0;
-            document.getElementById('slaAvgAge').textContent       = data.avg_age_days ?? 0;
-
-            const bucketsCtx = document.getElementById('slaAgeBucketsChart').getContext('2d');
-            new Chart(bucketsCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['0–3 days', '4–7', '8–14', '15+'],
-                    datasets: [{
-                        label: 'Active QA Items',
-                        data: [
-                            data.age_buckets?.['0_3'] ?? 0,
-                            data.age_buckets?.['4_7'] ?? 0,
-                            data.age_buckets?.['8_14'] ?? 0,
-                            data.age_buckets?.['15_plus'] ?? 0,
-                        ],
-                        backgroundColor: 'rgba(37, 99, 235, 0.4)',
-                        borderColor: 'rgba(37, 99, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-
-            const severityCtx = document.getElementById('slaSeverityChart').getContext('2d');
-            new Chart(severityCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low'],
-                    datasets: [{
-                        data: [
-                            data.severity_overdue?.critical ?? 0,
-                            data.severity_overdue?.high ?? 0,
-                            data.severity_overdue?.medium ?? 0,
-                            data.severity_overdue?.low ?? 0,
-                        ],
-                        backgroundColor: [
-                            '#ece3e3ff',
-                            '#ea580c',
-                            '#f59e0b',
-                            '#16a34a'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    },
-                    cutout: '60%'
-                }
-            });
-        });
-
-    // =========================
-    // 3) PHASE GATE ANALYTICS
-    // =========================
-  /*
-  
-    fetch("{{ route('analytics.phase-gates') }}")
-        .then(res => res.json())
-        .then(phases => {
-            const container = document.getElementById('phaseGatesContainer');
-
-            if (!phases || phases.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-muted py-3">
-                        No phases found yet.
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = '';
-
-            phases.forEach(p => {
-                const statusBadgeClass = (function () {
-                    switch (p.phase_status) {
-                        case 'CLOSED': return 'bg-success';
-                        case 'READY_FOR_SIGNOFF': return 'bg-primary';
-                        case 'CHANGES_REQUIRED': return 'bg-warning text-dark';
-                        case 'IN_REVIEW': return 'bg-info text-dark';
-                        default: return 'bg-secondary';
-                    }
-                })();
-
-                const card = document.createElement('div');
-                card.className = 'mb-3';
-
-                card.innerHTML =
-                    '<div class="border rounded p-3 bg-white">' +
-                        '<div class="d-flex justify-content-between align-items-center mb-2">' +
-                            '<div>' +
-                                '<strong>' + (p.project || '-') + '</strong>' +
-                                '<span class="text-muted"> · ' + p.phase_type + '</span>' +
-                            '</div>' +
-                            '<span class="badge ' + statusBadgeClass + '">' +
-                                (p.phase_status || 'N/A') +
-                            '</span>' +
-                        '</div>' +
-
-                        '<div class="progress mb-2" style="height: 10px;">' +
-                            '<div class="progress-bar" role="progressbar"' +
-                                ' style="width: ' + (p.percent_complete ?? 0) + '%;"' +
-                                ' aria-valuenow="' + (p.percent_complete ?? 0) + '"' +
-                                ' aria-valuemin="0" aria-valuemax="100">' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="d-flex justify-content-between small text-muted mb-2">' +
-                            '<span>Completed: ' + p.completed + '/' + p.total_items + '</span>' +
-                            '<span>Blocking: ' + p.blocking + ' (' + p.critical_blocking + ' critical)</span>' +
-                        '</div>' +
-
-                        '<div class="d-flex justify-content-between small">' +
-                            '<span>' +
-                                (p.eta_signoff
-                                    ? 'Estimated Ready For Signoff: <strong>' + p.eta_signoff + '</strong>'
-                                    : 'No ETA — all blocking items cleared or not enough data') +
-                            '</span>' +
-                        '</div>' +
-                    '</div>';
-
-                container.appendChild(card);
-            });
-        });
-
-   */
-        // =========================
-    // 4) PHASE BURN-DOWN CHART
-    // =========================
-
-    // -------------------------------
-    // PHASE BURNDOWN CHART (FIXED)
-    // -------------------------------
-    
+    /*
     let select = document.getElementById("burndownPhaseFilter");
     let chart = null;
 
@@ -1010,7 +814,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-
+*/
 
 });
 
@@ -1018,12 +822,6 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 
-<!-- أزل هذا المودال بالكامل -->
-<!--
-<div class="modal fade" id="qaItemsModal" tabindex="-1">
-    ...
-</div>
--->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -1031,6 +829,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("projectProgressContainer");
 
     function loadProject(projectId) {
+        
+    if (!projectId || projectId === "") {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                Select a project to view progress.
+            </div>`;
+        return;
+    }
 
         fetch(`/analytics/project-progress?project_id=${projectId}`)
             .then(res => res.json())
@@ -2041,153 +1847,5 @@ function initiateSignoff(phaseId) {
 </script>
 
 
-
-<style>
-    /* Smooth scrolling and scrollbar styling */
-.qa-popup-body {
-    flex: 1;
-    padding: 24px;
-    overflow-y: auto;
-    background: #f8fafc;
-    scroll-behavior: smooth;
-    height: calc(100% - 0px);
-}
-
-/* Custom scrollbar for the modal body */
-.qa-popup-body::-webkit-scrollbar {
-    width: 8px;
-}
-
-.qa-popup-body::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-}
-
-.qa-popup-body::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-}
-
-.qa-popup-body::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* For Firefox */
-.qa-popup-body {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
-}
-
-/* Scrollbar for the table if content is too wide */
-.qa-popup-items .table-responsive {
-    max-height: 450px;
-    overflow-y: auto;
-    margin-right: 4px;
-    padding-right: 4px;
-}
-
-.qa-popup-items .table-responsive::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-.qa-popup-items .table-responsive::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-.qa-popup-items .table-responsive::-webkit-scrollbar-thumb {
-    background: #94a3b8;
-    border-radius: 3px;
-}
-
-/* Make table header sticky when scrolling */
-.qa-popup-items thead {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: #f1f5f9 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Pagination or loading indicator */
-.qa-popup-load-more {
-    text-align: center;
-    padding: 15px;
-    margin-top: 15px;
-}
-
-.qa-popup-load-more button {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.qa-popup-load-more button:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
-}
-
-/* Infinite scroll loading indicator */
-.qa-popup-infinite-loading {
-    text-align: center;
-    padding: 20px;
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-
-
-.qa-popup-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1);
-    width: 90%;
-    max-width: 1100px;
-    height: 50vh;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-}
-
-.qa-popup-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 99998;
-}
-
-.qa-popup-header {
-    padding: 16px 20px;
-    background: #1e3a8a;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.qa-popup-body {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    max-height: calc(90vh - 120px);
-}
-
-.table-responsive {
-    max-height: 65vh !important;
-    overflow-y: auto;
-}
-
-    </style>
 @endsection
 
