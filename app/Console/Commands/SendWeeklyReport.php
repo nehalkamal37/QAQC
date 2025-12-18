@@ -7,35 +7,53 @@ use Illuminate\Support\Facades\Mail;
 use App\Services\WeeklyReportService;
 use App\Mail\WeeklyReportMail;
 use App\Models\ReportSchedule;
-use App\Models\User;
+use Cron\CronExpression;
 
 class SendWeeklyReport extends Command
 {
+
+    
     protected $signature = 'report:weekly';
-    protected $description = 'Send weekly QA/QC report to all users';
-
-    public function handle()
+    protected $description = 'Send weekly QA/QC report to admin';
+/*
+    public function handle(WeeklyReportService $reportService)
     {
-        $schedule = ReportSchedule::where('type', 'weekly')
-            ->where('enabled', true)
-            ->first();
+        $report = $reportService->generate();
 
-        if (! $schedule) {
-            $this->warn('No enabled weekly schedule found.');
-            return;
-        }
+        Mail::to('nehalk751@gmail.com')->send(
+            new WeeklyReportMail($report)
+        );
 
+        $this->info('Weekly report sent successfully.');
+    }
+*/
+
+
+public function handle()
+{
+    $schedule = ReportSchedule::where('type', 'weekly')
+        ->where('enabled', true)
+        ->first();
+
+    if (! $schedule) {
+        return;
+    }
+
+    $cron = new CronExpression($schedule->cron_expression);
+
+    if (! $cron->isDue()) {
+        return; // Not time yet
+    }
         $report = app(WeeklyReportService::class)->generate();
 
-        User::whereNotNull('email')
-            ->chunk(50, function ($users) use ($report) {
-                foreach ($users as $user) {
-                    Mail::to($user->email)->send(
-                        new WeeklyReportMail($report)
-                    );
-                }
-            });
+    // 👇 هنا بس نبعت التقرير
+    Mail::to('nehalk751@gmail.com')->send(
+            new WeeklyReportMail($report)
+        );
 
-        $this->info('Weekly report sent to all users.');
-    }
+    $this->info('Weekly report sent.');
+}
+
+
+
 }

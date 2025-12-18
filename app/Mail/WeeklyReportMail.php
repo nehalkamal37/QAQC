@@ -23,3 +23,4 @@ class WeeklyReportMail extends Mailable
             ->view('emails.weekly-report');
     }
 }
+
