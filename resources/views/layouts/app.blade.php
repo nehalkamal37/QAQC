@@ -76,7 +76,7 @@
 					
 						<li class="sidebar-item {{ request()->routeIs('timeline.index') ? 'active' : '' }}">
 						<a class="sidebar-link" href="{{ route('timeline.index') }}">
-			  <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Timeline Logs</span>
+			  <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Activity Timeline </span>
 			</a>
 					</li>
 {{-- resources/views/layouts/app.blade.php --}}
