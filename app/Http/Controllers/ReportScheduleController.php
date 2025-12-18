@@ -10,8 +10,13 @@ class ReportScheduleController extends Controller
 
     public function edit(){
 
-    $schedule =ReportSchedule::first();  // get the first schedule
-    return view('settings.reports',compact('schedule'));
+   // $schedule =ReportSchedule::first();  // get the first schedule
+   // return view('settings.reports',compact('schedule'));
+
+    $weekly  = ReportSchedule::where('type', 'weekly')->first();
+    $monthly = ReportSchedule::where('type', 'monthly')->first();
+
+    return view('settings.reports', compact('weekly', 'monthly'));
 
     }
 

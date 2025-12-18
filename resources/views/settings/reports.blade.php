@@ -1,6 +1,28 @@
 @extends('layouts.app')
 @section('content')
 
+
+@php
+    function cronDescription($schedule) {
+        if (! $schedule) return 'Not configured';
+
+        $parts = explode(' ', $schedule->cron_expression);
+
+        // weekly: minute hour * * day
+        if ($schedule->type === 'weekly') {
+            $days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            return $days[$parts[4]] . ' at ' .
+                   str_pad($parts[1],2,'0',STR_PAD_LEFT) . ':' .
+                   str_pad($parts[0],2,'0',STR_PAD_LEFT);
+        }
+
+        // monthly: minute hour day * *
+        return 'Day ' . $parts[2] . ' at ' .
+               str_pad($parts[1],2,'0',STR_PAD_LEFT) . ':' .
+               str_pad($parts[0],2,'0',STR_PAD_LEFT);
+    }
+@endphp
+
 <form method="POST" class="report-schedule-form">
     @csrf
 
@@ -68,6 +90,29 @@
 
     <button type="submit" class="btn-primary">Save Schedule</button>
 </form>
+
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Report Schedule Status</h5>
+
+        <p>
+            <strong>Weekly Report:</strong><br>
+            {{ cronDescription($weekly) }}<br>
+            <small class="text-muted">
+                Last updated: {{ optional($weekly?->updated_at)->format('M d, Y – H:i') ?? '—' }}
+            </small>
+        </p>
+
+        <p class="mt-3">
+            <strong>Monthly Report:</strong><br>
+            {{ cronDescription($monthly) }}<br>
+            <small class="text-muted">
+                Last updated: {{ optional($monthly?->updated_at)->format('M d, Y – H:i') ?? '—' }}
+            </small>
+        </p>
+    </div>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

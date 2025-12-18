@@ -12,13 +12,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 
-Schedule::command('report:weekly')
-    ->everyMinute(); // Laravel checks every minute
-
-
-Schedule::command('report:monthly')
-    ->everyMinute(); // Laravel checks every minute
-
+Schedule::command('report:weekly')->everyMinute();
+Schedule::command('report:monthly')->everyMinute();
 
 
 /*
