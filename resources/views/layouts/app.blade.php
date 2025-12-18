@@ -43,12 +43,13 @@
             </a>
 					</li>
 					                   
-
 <li class="sidebar-item {{ request()->routeIs('checklist.upload') ? 'active' : '' }}">
-						<a class="sidebar-link" href="{{ route('checklist.upload') }}">
-              <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">QA Items Upload</span>
-            </a>
-					</li>
+    <a class="sidebar-link" href="{{ route('checklist.upload') }}">
+        <i class="align-middle" data-feather="upload"></i>
+        <span class="align-middle">QA Items Upload</span>
+    </a>
+</li>
+
 
 <li class="sidebar-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
     <a class="sidebar-link" href="{{ route('projects.index') }}">
