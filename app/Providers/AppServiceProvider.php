@@ -5,7 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
-use App\Models\QaItem;
+use App\Models\QAItem;
 use App\Models\ActivityLog;
 use App\Observers\ActivityLogObserver;
 
@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         // Share assignedCount with all views
         View::composer('*', function ($view) {
             if (Auth::check()) {
-                $assignedCount = QaItem::where('assigned_to', Auth::id())
+                $assignedCount = QAItem::where('assigned_to', Auth::id())
                     ->whereNotIn('status', ['closed', 'verified'])
                     ->count();
                 
