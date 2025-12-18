@@ -74,11 +74,15 @@
 					</li>  -->
 
 					
-						<li class="sidebar-item {{ request()->routeIs('timeline.index') ? 'active' : '' }}">
-						<a class="sidebar-link" href="{{ route('timeline.index') }}">
-			  <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Activity Timeline </span>
-			</a>
-					</li>
+					<li class="sidebar-item {{ request()->routeIs('timeline.index') ? 'active' : '' }}">
+    <a class="sidebar-link" href="{{ route('timeline.index') }}">
+        <i class="align-middle" data-feather="activity"></i>
+        <span class="align-middle">Activity Timeline</span>
+    </a>
+</li>
+
+
+
 {{-- resources/views/layouts/app.blade.php --}}
 <li class="sidebar-item">
     <a class="sidebar-link" href="{{ route('notifications.index') }}">
@@ -133,20 +137,20 @@
 </li>
 --}}
 
-
 <li class="sidebar-item {{ request()->routeIs('settings.reports.edit') ? 'active' : '' }}">
     <a class="sidebar-link" href="{{ route('settings.reports.edit') }}">
-        <i class="align-middle" data-feather="user"></i> <span class="align-middle">emails settings</span>
+        <i class="align-middle" data-feather="mail"></i>
+        <span class="align-middle">Email Settings</span>
     </a>
 </li>
-
-
 
 <li class="sidebar-item {{ request()->routeIs('reports.weekly') ? 'active' : '' }}">
     <a class="sidebar-link" href="{{ route('reports.weekly') }}">
-        <i class="align-middle" data-feather="user"></i> <span class="align-middle">reports</span>
+        <i class="align-middle" data-feather="bar-chart-2"></i>
+        <span class="align-middle">Reports</span>
     </a>
 </li>
+
 
 					@guest
     <li class="sidebar-item">

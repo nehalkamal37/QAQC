@@ -8,6 +8,7 @@ use App\Mail\WeeklyReportMail;
 use App\Models\ReportSchedule;
 use Cron\CronExpression;
 use App\Services\MonthlyReportService;
+use App\Models\User;
 
 class SendMonthlyReport extends Command
 {
@@ -47,9 +48,13 @@ public function handle()
         $report = app(MonthlyReportService::class)->generate();
 
     // 👇 هنا بس نبعت التقرير
-    Mail::to('nehalk751@gmail.com')->send(
-            new WeeklyReportMail($report)
-        );
+
+        $emails = User::whereNotNull('email')->pluck('email')->toArray();
+
+Mail::to($emails)->send(
+    new WeeklyReportMail($report)
+);
+
 
     $this->info('monthly report sent.');
 }
