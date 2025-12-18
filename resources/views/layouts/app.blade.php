@@ -91,12 +91,15 @@
 					
 {{-- resources/views/layouts/app.blade.php --}}
 {{-- Add this to your sidebar navigation --}}
+
+@if(auth()->check() && ( auth()->user()->role_id == 2 || auth()->user()->role_id == 1) )
 <li class="sidebar-item {{ request()->routeIs('assignments.*') ? 'active' : '' }}">
 						<a class="sidebar-link" href="{{ route('assignments.index') }}">
 			  <i class="align-middle" data-feather="check-circle"></i> <span class="align-middle">Team Assignments</span>
 			</a>
 
 					</li>
+					@endif
 
 					<li class="sidebar-item {{ request()->routeIs('dashboard.my-work') ? 'active' : '' }}">
 						<a class="sidebar-link" href="{{  route('dashboard.my-work') }}">

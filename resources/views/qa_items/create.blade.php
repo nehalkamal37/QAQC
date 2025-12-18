@@ -94,7 +94,7 @@
 
 <div class="mb-3">
     <label for="assigned_to" class="form-label">Assign To</label>
-    <select name="assigned_to" id="assigned_to" class="form-select" required>
+    <select name="assigned_to" id="assigned_to" class="form-select" >
         <option value="">Select Team Member</option>
         @foreach($project->activeAssignments as $assignment)
             <option value="{{ $assignment->user_id }}" {{ old('assigned_to') == $assignment->user_id ? 'selected' : '' }}>

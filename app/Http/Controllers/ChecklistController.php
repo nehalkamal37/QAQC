@@ -102,11 +102,13 @@ class ChecklistController extends Controller
             // Run Python script
             $scriptPath = base_path('python/extract_pdf_fields.py');
 
+        
+
             $process = new Process([
-                'python3',
-                $scriptPath,
-                $fullPath
-            ]);
+    '/usr/bin/python3',
+    $scriptPath,
+    $fullPath
+]);
 
             $process->setTimeout(120);
             $process->run();
@@ -198,11 +200,13 @@ public function uploadAndSave(Request $request)
         // 2) Run Python script
         $scriptPath = base_path('python/extract_pdf_fields.py');
 
+     
+
         $process = new Process([
-            'python3',
-            $scriptPath,
-            $fullPath
-        ]);
+    '/usr/bin/python3',
+    $scriptPath,
+    $fullPath
+]);
 
         $process->setTimeout(300);
         $process->run();
@@ -210,9 +214,14 @@ public function uploadAndSave(Request $request)
         // Remove uploaded file
         Storage::delete($path);
 
-        if (!$process->isSuccessful()) {
-            return back()->with('error', 'PDF processing failed.');
-        }
+    
+        Log::error('PYTHON EXIT CODE: ' . $process->getExitCode());
+Log::error('PYTHON STDOUT: ' . $process->getOutput());
+Log::error('PYTHON STDERR: ' . $process->getErrorOutput());
+
+if (!$process->isSuccessful()) {
+    return back()->with('error', 'PDF processing failed.');
+}
 
         // 3) Parse JSON output
         $output = json_decode($process->getOutput(), true);

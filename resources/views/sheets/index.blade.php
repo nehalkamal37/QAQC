@@ -134,7 +134,7 @@
                                 
          <a href="{{ route('checklist.upload') }}" class="btn btn-sm btn-primary">
 
-                                            ⚡ Upload CSV
+                                             Upload Items
                                         </a>
                                         
                                 
