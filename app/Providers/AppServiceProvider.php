@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\QAItem;
 use App\Models\ActivityLog;
 use App\Observers\ActivityLogObserver;
+use Illuminate\Support\Facades\Cache;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
    
-    public function boot()
+    public function boot1()
     {
         // Share assignedCount with all views
         View::composer('*', function ($view) {
@@ -43,5 +44,31 @@ class AppServiceProvider extends ServiceProvider
 }
 
 
+public function boot()
+    {
+View::composer('*', function ($view) {
+    if (!Auth::check()) {
+        return;
+    }
 
+    $userId = Auth::id();
+
+    $assignedCount = Cache::remember(
+        "assigned_count_user_{$userId}",
+        now()->addMinutes(5),
+        function () use ($userId) {
+            return QAItem::where('assigned_to', $userId)
+                ->whereNotIn('status', ['closed', 'verified'])
+                ->count();
+        }
+    );
+
+    $view->with('assignedCount', $assignedCount);
+});
+
+
+        ActivityLog::observe(ActivityLogObserver::class);
+
+
+    }
 }
