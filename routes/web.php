@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('sheets/{sheet}')->group(function () {
 
         // CRUD
+
         Route::get('qa-items', [QaItemController::class, 'index'])->name('qa_items.index');
         Route::get('qa-items/create', [QaItemController::class, 'create'])->name('qa_items.create');
         Route::post('qa-items', [QaItemController::class, 'store'])->name('qa_items.store');
@@ -392,7 +393,7 @@ Route::middleware('auth')->group(function () {
             ->name('qa_items.updateStatus');
 
 
-            
+
 });
 
 // ======================

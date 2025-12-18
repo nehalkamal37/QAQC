@@ -33,14 +33,14 @@
     </h6>
 
 
+    
     <p class="mb-1">
-    @if($notification->actor)
-        <strong>{{ $notification->actor->name }}</strong>
-    @else
-        <strong>System</strong>
-    @endif
-    {{ 'has '.  $notification->message }}
+    <strong>
+        {{ optional($notification->actor)->name ?? 'System' }}
+    </strong>
+    {{ $notification->message }}
 </p>
+
 
     {{-- الرسالة الأساسية 
     <p class="mb-1">{{ $notification->message }}</p>

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="container-fluid px-4 py-4 timeline-container">
 
     <!-- Header -->
@@ -207,15 +208,16 @@
                                 </div>
                             @endif
 
-                            @if($log->qa_item_id)
                                 <div class="context-item">
                                     <i class="fas fa-clipboard-check text-danger me-1"></i>
-                                    <a href="{{ route('qa_items.index', $log->sheet_id) }}#item-{{ $log->qa_item_id }}"
-                                       class="qa-item-link">
-                                        QA Item #{{ $log->qa_item_id }}
-                                    </a>
+                                 @if($log->qa_item_id && $log->sheet_id)
+    <a href="{{ route('qa_items.index', ['sheet' => $log->sheet_id]) }}#item-{{ $log->qa_item_id }}">
+        QA Item #{{ $log->qa_item_id }}
+    </a>
+@endif
+
+
                                 </div>
-                            @endif
 
                         </div>
 
@@ -252,360 +254,48 @@
 
                     </div>
 
-                </div>
+                </div>    
+
             @endforeach
 
         </div>
+
     </div>
 
-    {{ $logs->links() }}
+<div class="timeline-pagination mt-4">
+    {{ $logs->links('pagination::bootstrap-5') }}
+</div>
 
 </div>
 
+<link rel="stylesheet" href="{{ asset('dash/css/timeline.css') }}">
 
-
-
-
-<!-- Custom CSS -->
 <style>
-    .timeline-container {
-        background-color: #f8fafc;
-        min-height: 100vh;
-    }
-
-    /* Filter Card */
-    .filter-card {
-        border: none;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border-radius: 12px;
-    }
-
-    .filter-card .form-select,
-    .filter-card .form-control {
-        border-radius: 8px;
-        font-size: 0.875rem;
-    }
-
-    .filter-card .input-group-text {
-        border-radius: 8px 0 0 8px;
-    }
-
-    .filter-card .form-select.border-start-0 {
-        border-radius: 0 8px 8px 0;
-    }
-
-    /* Timeline Card */
-    .timeline-card {
-        border: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        border-radius: 12px;
-        overflow: hidden;
-    }
-
-    /* Timeline Item */
-    .timeline-item {
-        display: flex;
-        
-    padding: 16px 20px;
-
-        border-bottom: 1px solid #f1f1f1;
-        transition: background-color 0.2s ease;
-    }
-
-    .timeline-item:hover {
-        background-color: #fafbfc;
-    }
-
-    .timeline-item:last-child {
-        border-bottom: none;
-    }
-
-    /* Timeline Marker */
-    .timeline-marker {
-        position: relative;
-        margin-right: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .marker-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1rem;
-        z-index: 2;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-/*
-    .timeline-line {
-        width: 2px;
-        flex-grow: 1;
-        background: linear-gradient(to bottom, #e9ecef, transparent);
-        margin-top: 8px;
-    }*/
-.timeline-line {
-    width: 2px;
-    height: 40px; /* fixed height instead of flex-grow */
-    background: #e9ecef;
-    margin-top: 8px;
+.timeline-pagination {
+    display: flex;
+    justify-content: center;
 }
 
-    .timeline-item:last-child .timeline-line {
-        background: #e9ecef;
-    }
+.timeline-pagination ul.pagination {
+    display: flex;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 6px;
+}
 
-    /* Timeline Content */
-    .timeline-content {
-        flex: 1;
-    }
+.timeline-pagination .page-item {
+    display: inline-block;
+}
 
-    /* Timeline Header */
-    .timeline-header {
-        margin-bottom: 16px;
-    }
+.timeline-pagination .page-link {
+    padding: 4px 8px;
+    font-size: 13px;
+    line-height: 1.2;
+}
 
-    .user-info {
-        display: flex;
-        align-items: center;
-    }
 
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #4361ee, #3a56d4);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        margin-right: 12px;
-    }
+    </style>
 
-    .user-details {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .user-name {
-        font-size: 1rem;
-        margin-bottom: 4px;
-    }
-
-    .action-badge {
-        font-size: 0.75rem;
-        padding: 4px 8px;
-    }
-
-    .timeline-time {
-        text-align: right;
-    }
-
-    .time-date {
-        font-weight: 600;
-        color: #495057;
-    }
-
-    .time-hour {
-        font-size: 0.875rem;
-    }
-
-    .time-ago {
-        font-size: 0.75rem;
-    }
-
-    /* Timeline Body */
-    .context-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .context-item {
-        background: #f8f9fa;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        border-left: 3px solid #4361ee;
-    }
-
-    .qa-item-link {
-        color: #4361ee;
-        text-decoration: none;
-        font-weight: 600;
-    }
-
-    .qa-item-link:hover {
-        text-decoration: underline;
-    }
-
-    /* Note Card */
-    .note-card {
-        background: #fff9e6;
-        border-left: 4px solid #ffd166;
-        padding: 12px 16px;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        margin-bottom: 12px;
-    }
-
-    /* Attachment Preview */
-    .attachment-preview {
-        display: flex;
-        align-items: center;
-    }
-
-    .attachment-image {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 8px;
-        border: 2px solid #e9ecef;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }
-
-    .attachment-image:hover {
-        transform: scale(1.05);
-        border-color: #4361ee;
-    }
-
-    .attachment-btn {
-        border-radius: 6px;
-        font-size: 0.8rem;
-    }
-
-    /* Changes List */
-    .changes-title {
-        color: #495057;
-        font-size: 0.9rem;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-    }
-
-    .changes-grid {
-        display: grid;
-        gap: 8px;
-    }
-
-    .change-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 12px;
-        background: #f8f9fa;
-        border-radius: 6px;
-        font-size: 0.85rem;
-    }
-
-    .change-field {
-        font-weight: 600;
-        color: #495057;
-        min-width: 120px;
-    }
-
-    .change-arrow {
-        display: flex;
-        align-items: center;
-        flex: 1;
-        justify-content: space-between;
-        max-width: 300px;
-    }
-
-    .from-value {
-        color: #6c757d;
-        text-decoration: line-through;
-    }
-
-    .to-value {
-        color: #198754;
-        font-weight: 600;
-    }
-
-    /* Empty State */
-    .empty-state {
-        padding: 60px 20px;
-    }
-
-    .empty-icon {
-        opacity: 0.5;
-    }
-
-    /* Pagination */
-    .timeline-pagination .pagination {
-        margin-bottom: 0;
-    }
-
-    .timeline-pagination .page-link {
-        border-radius: 6px;
-        margin: 0 2px;
-        border: none;
-        color: #6c757d;
-    }
-
-    .timeline-pagination .page-item.active .page-link {
-        background-color: #4361ee;
-        border-color: #4361ee;
-    }
-
-    /* Timeline Actions */
-    .timeline-actions .btn {
-        border-radius: 6px;
-        font-size: 0.8rem;
-        margin-left: 8px;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .timeline-item {
-            flex-direction: column;
-            padding: 16px;
-        }
-
-        .timeline-marker {
-            flex-direction: row;
-            margin-right: 0;
-            margin-bottom: 16px;
-            width: 100%;
-        }
-
-        .timeline-line {
-            width: 100%;
-            height: 2px;
-            margin-top: 0;
-            margin-left: 8px;
-        }
-
-        .timeline-header .d-flex {
-            flex-direction: column;
-        }
-
-        .timeline-time {
-            text-align: left;
-            margin-top: 8px;
-        }
-
-        .context-items {
-            flex-direction: column;
-        }
-
-        .change-item {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .change-arrow {
-            width: 100%;
-            margin-top: 4px;
-        }
-    }
-</style>
 
 <!-- JavaScript for Expand/Collapse -->
 <script>

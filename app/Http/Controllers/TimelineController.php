@@ -123,7 +123,7 @@ $logs = ActivityLog::query()
         )
 
         ->orderBy('created_at', 'desc')
-        ->paginate(25)
+        ->paginate(10)
         ->withQueryString();
 
     return view('timeline.index', compact(
