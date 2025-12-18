@@ -199,7 +199,7 @@ public function uploadAndSave(Request $request)
         $scriptPath = base_path('python/extract_pdf_fields.py');
 
         $process = new Process([
-            'python',
+            'python3',
             $scriptPath,
             $fullPath
         ]);
