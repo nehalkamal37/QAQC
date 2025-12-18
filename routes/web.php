@@ -384,6 +384,15 @@ Route::middleware('auth')->group(function () {
     Route::get('py', function () {
         return view('python.extract_pdf_fields.py');
     });
+
+
+
+    // missed roues after deploy
+     Route::post('qa-items/{id}/status', [QaItemController::class, 'updateStatus'])
+            ->name('qa_items.updateStatus');
+
+
+            
 });
 
 // ======================
