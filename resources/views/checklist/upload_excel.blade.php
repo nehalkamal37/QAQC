@@ -12,21 +12,35 @@
         </div>
 
         <div class="card-body p-4">
-            {{-- SUCCESS MESSAGE --}}
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <strong>Success!</strong> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
 
-            {{-- ERROR MESSAGE --}}
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Error!</strong> {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+      {{-- SUCCESS MESSAGE --}}
+@if(session('success'))
+    <div class="alert border-0 rounded-3 mb-4"
+         style="background:#e6fffa; color:#065f46;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>
+                <strong>Success</strong><br>
+                <span class="small">{{ session('success') }}</span>
+            </div>
+        </div>
+    </div>
+@endif
+
+{{-- ERROR MESSAGE --}}
+@if(session('error'))
+    <div class="alert border-0 rounded-3 mb-4"
+         style="background:#fee2e2; color:#7f1d1d;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>
+                <strong>Error</strong><br>
+                <span class="small">{{ session('error') }}</span>
+            </div>
+        </div>
+    </div>
+@endif
+
 
             {{-- UPLOAD FORM --}}
             <form action="{{ route('checklist.upload.excel.save') }}" method="POST" enctype="multipart/form-data">
@@ -60,23 +74,105 @@
                 </div>
 
                 {{-- EXCEL FILE --}}
-                <div class="mb-4">
-                    <label for="excel_file" class="form-label fw-bold">Select Excel File:</label>
-                    <input type="file" name="excel_file" id="excel_file" 
-                           class="form-control form-control-lg" 
-                           accept=".xlsx,.xls" required>
-                    <div class="form-text">
-                        Upload Excel file with columns: Description, Applicable, Incorporated, Confirmed
-                    </div>
+               {{-- EXCEL FILE --}}
+<div class="mb-4">
+    <label for="excel_file" class="form-label fw-bold">Select Excel File:</label>
+
+    <div class="d-flex align-items-center gap-3">
+        <input
+            type="file"
+            name="excel_file"
+            id="excel_file"
+            class="form-control form-control-lg"
+            accept=".xlsx,.xls"
+            required>
+
+        <!-- File size progress -->
+        <div class="flex-grow-1">
+            <div class="progress" style="height: 8px;">
+                <div
+                    id="excelSizeBar"
+                    class="progress-bar bg-success"
+                    style="width: 0%;">
                 </div>
+            </div>
+            <small class="text-muted" id="excelSizeText">
+                No file selected
+            </small>
+        </div>
+    </div>
+
+    <div class="form-text mt-1">
+        Upload Excel file with columns: Description, Applicable, Incorporated, Confirmed
+    </div>
+</div>
+
 
                 <button type="submit" class="btn btn-success btn-lg w-100">
                     <i class="fas fa-upload me-2"></i> Upload & Process Excel
                 </button>
+
+     
+                
             </form>
+            <br>
+<a href="{{ route('checklist.upload') }}" 
+   class="btn btn-info btn-lg w-100 mb-3 d-flex mt-11 align-items-center justify-content-center"
+   style="font-weight: 600;">
+    <i class="fas fa-file-csv me-2"></i> Upload PDF
+</a>
         </div>
     </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const input = document.getElementById("excel_file");
+    const bar   = document.getElementById("excelSizeBar");
+    const text  = document.getElementById("excelSizeText");
+
+    const MAX_MB = 10; // visual max size (adjust if you want)
+
+    input.addEventListener("change", function () {
+        if (!this.files || !this.files[0]) {
+            bar.style.width = "0%";
+            text.textContent = "No file selected";
+            return;
+        }
+
+        const fileSizeMB = this.files[0].size / (1024 * 1024);
+        const percent = Math.min((fileSizeMB / MAX_MB) * 100, 100);
+
+        bar.style.width = percent + "%";
+        text.textContent = fileSizeMB.toFixed(2) + " MB";
+
+        // Optional color feedback
+        bar.classList.remove("bg-success", "bg-warning", "bg-danger");
+
+        if (fileSizeMB < 5) {
+            bar.classList.add("bg-success");
+        } else if (fileSizeMB < 10) {
+            bar.classList.add("bg-warning");
+        } else {
+            bar.classList.add("bg-danger");
+        }
+    });
+
+});
+</script>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

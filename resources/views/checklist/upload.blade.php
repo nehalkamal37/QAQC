@@ -16,21 +16,34 @@
 
         <div class="card-body p-4">
 
-            {{-- SUCCESS MESSAGE --}}
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <strong>Success!</strong> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+  {{-- SUCCESS MESSAGE --}}
+@if(session('success'))
+    <div class="alert border-0 rounded-3 mb-4"
+         style="background:#e6fffa; color:#065f46;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>
+                <strong>Success</strong><br>
+                <span class="small">{{ session('success') }}</span>
+            </div>
+        </div>
+    </div>
+@endif
 
-            {{-- ERROR MESSAGE --}}
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Error!</strong> {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+{{-- ERROR MESSAGE --}}
+@if(session('error'))
+    <div class="alert border-0 rounded-3 mb-4"
+         style="background:#fee2e2; color:#7f1d1d;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>
+                <strong>Error</strong><br>
+                <span class="small">{{ session('error') }}</span>
+            </div>
+        </div>
+    </div>
+@endif
+
 
             {{-- UPLOAD FORM --}}
             <form action="{{ route('checklist.upload.save') }}" method="POST" enctype="multipart/form-data">
@@ -64,17 +77,39 @@
                 </div>
 
                 {{-- PDF --}}
-                <div class="mb-4">
-                    <label for="checklist_pdf" class="form-label fw-bold">Select Checklist PDF:</label>
-                    <input 
-                        type="file" 
-                        class="form-control form-control-lg" 
-                        id="checklist_pdf" 
-                        name="checklist_pdf" 
-                        required 
-                        accept=".pdf">
-                    <div class="form-text">Upload the checklist PDF with form checkboxes.</div>
+            {{-- PDF --}}
+<div class="mb-4">
+    <label for="checklist_pdf" class="form-label fw-bold">
+        Select Checklist PDF:
+    </label>
+
+    <div class="d-flex align-items-center gap-3">
+        <input 
+            type="file" 
+            class="form-control form-control-lg" 
+            id="checklist_pdf" 
+            name="checklist_pdf" 
+            required 
+            accept=".pdf">
+
+        {{-- File size indicator --}}
+        <div style="min-width:140px;">
+            <div class="progress" style="height:10px; background:#e5e7eb;">
+                <div 
+                    id="fileSizeBar"
+                    class="progress-bar"
+                    style="width:0%; background:#3b82f6;">
                 </div>
+            </div>
+            <small class="text-muted" id="fileSizeText">0 MB</small>
+        </div>
+    </div>
+
+    <div class="form-text">
+        Upload the checklist PDF with form checkboxes.
+    </div>
+</div>
+
 
                 <button type="submit" class="btn btn-primary btn-lg w-100">
                     <i class="fas fa-upload me-2"></i> Upload & Save to Database
@@ -97,6 +132,31 @@
 {{-- نمرّر الداتا من PHP إلى JS --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("checklist_pdf");
+    const bar   = document.getElementById("fileSizeBar");
+    const text  = document.getElementById("fileSizeText");
+
+    // change this if your max upload is different
+    const MAX_MB = 20;
+
+    input.addEventListener("change", function () {
+        if (!this.files.length) return;
+
+        const sizeMB = this.files[0].size / (1024 * 1024);
+        const percent = Math.min((sizeMB / MAX_MB) * 100, 100);
+
+        bar.style.width = percent + "%";
+        bar.style.background =
+            percent < 70 ? "#22c55e" :
+            percent < 90 ? "#f59e0b" :
+                           "#ef4444";
+
+        text.textContent = `${sizeMB.toFixed(2)} MB`;
+    });
+});
+</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
