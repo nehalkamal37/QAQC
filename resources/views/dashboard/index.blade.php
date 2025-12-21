@@ -599,11 +599,11 @@
             <div class="section-card">
                 <div class="section-header">
                     <h5 class="fw-bold mb-0"> Severity Levels</h5>
-                    <span class="text-muted small">Show QA items reviews by severity</span>
+                    <span class="text-muted small">Current QA items severity</span>
                 </div>
                 <div class="row g-3 mt-2">
                     <div class="col-md-6">
-                        <a href="{{ route('qa_reviews.index', ['severity' => 'critical']) }}" class="text-decoration-none">
+                   <!--     <a href="{{ route('qa_reviews.index', ['severity' => 'critical']) }}" class="text-decoration-none"> -->
                             <div class="severity-card severity-critical">
                                
                                 <div class="severity-content">
@@ -611,10 +611,9 @@
                                     <div class="severity-value">{{ $data['qa_critical'] ?? 0 }}</div>
                                 </div>
                             </div>
-                        </a>
+                        
                     </div>
                     <div class="col-md-6">
-                        <a href="{{ route('qa_reviews.index', ['severity' => 'high']) }}" class="text-decoration-none">
                             <div class="severity-card severity-high">
                                 
                                 <div class="severity-content">
@@ -622,10 +621,9 @@
                                     <div class="severity-value">{{ $data['qa_high'] ?? 0 }} </div>
                                 </div>
                             </div>
-                        </a>
+                        
                     </div>
                     <div class="col-md-6">
-                        <a href="{{ route('qa_reviews.index', ['severity' => 'medium']) }}" class="text-decoration-none">
                             <div class="severity-card severity-medium">
                         
                                 <div class="severity-content">
@@ -633,10 +631,9 @@
                                     <div class="severity-value">{{ $data['qa_medium'] ?? 0 }}</div>
                                 </div>
                             </div>
-                        </a>
+                        
                     </div>
                     <div class="col-md-6">
-                        <a href="{{ route('qa_reviews.index', ['severity' => 'low']) }}" class="text-decoration-none">
                             <div class="severity-card severity-low">
                               
                                 <div class="severity-content">
@@ -644,7 +641,7 @@
                                     <div class="severity-value">{{ $data['qa_low'] ?? 0 }}</div>
                                 </div>
                             </div>
-                        </a>
+                        
                     </div>
                 </div>
             </div>
