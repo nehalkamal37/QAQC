@@ -53,6 +53,7 @@ $data = [
         ->orderBy('qa_items_assigned_count', 'desc')
         ->take(5)
         ->get(),
+        
 ];
 
 

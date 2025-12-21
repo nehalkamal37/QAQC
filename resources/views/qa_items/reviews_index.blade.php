@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid px-4 mt-4">
 
-    <h1 class="h3 mb-4 fw-bold">📝 Reviews</h1>
+    <h1 class="h3 mb-4 fw-bold"> Reviews</h1>
 
     {{-- FILTERS --}}
     <form method="GET" action="{{ route('qa_reviews.index') }}" class="card p-3 mb-4 shadow-sm border-0">
@@ -14,7 +14,7 @@
                 <select name="severity" class="form-select">
                     <option value="">All</option>
                     @foreach(['critical','high','medium','low'] as $sev)
-                        <option value="{{ $sev }}" @selected(request('severity')==$sev)>
+                        <option value="{{ $sev }}" @selected(request('severity') === $sev)>
                             {{ ucfirst($sev) }}
                         </option>
                     @endforeach
@@ -26,7 +26,7 @@
                 <select name="reviewer" class="form-select">
                     <option value="">All</option>
                     @foreach($reviewers as $u)
-                        <option value="{{ $u->id }}" @selected(request('reviewer')==$u->id)>
+                        <option value="{{ $u->id }}" @selected(request('reviewer') == $u->id)>
                             {{ $u->name }}
                         </option>
                     @endforeach
@@ -35,7 +35,11 @@
 
             <div class="col-md-3">
                 <label class="form-label fw-bold">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search comments">
+                <input type="text"
+                       name="search"
+                       value="{{ request('search') }}"
+                       class="form-control"
+                       placeholder="Search comments">
             </div>
 
             <div class="col-md-3 d-flex align-items-end">
@@ -44,7 +48,6 @@
 
         </div>
     </form>
-
 
     <div class="card shadow-sm border-0">
         <div class="card-body">
@@ -65,51 +68,63 @@
                 <tbody>
 
                 @forelse($reviews as $rev)
+
                     @php
-                        $sevBadge = match($rev->item->severity) {
-                            'critical' => 'danger',
-                            'high'     => 'warning',
-                            'medium'   => 'info',
-                            'low'      => 'secondary',
-                            default    => 'dark'
-                        };
+                        $item = $rev->item;
+                        $user = $rev->user;
+
+                        // Skip broken rows safely
+                        if (!$item) {
+                            continue;
+                        }
+
+                        switch ($item->severity) {
+                            case 'critical': $sevBadge = 'danger'; break;
+                            case 'high':     $sevBadge = 'warning'; break;
+                            case 'medium':   $sevBadge = 'info'; break;
+                            case 'low':      $sevBadge = 'secondary'; break;
+                            default:         $sevBadge = 'dark';
+                        }
+
+                        $oldStatus = data_get($rev->old_value, 'status', '-');
+                        $newStatus = data_get($rev->new_value, 'status', '-');
                     @endphp
 
                     <tr>
                         {{-- ITEM ID --}}
                         <td class="fw-bold">
-                            <a href="{{ route('qa_items.index', $rev->item->sheet_id) }}#item-{{ $rev->item->id }}"
+                            <a href="{{ route('qa_items.index', $item->sheet_id) }}#item-{{ $item->id }}"
                                class="text-primary">
-                                #{{ $rev->item->id }}
+                                #{{ $item->id }}
                             </a>
                         </td>
 
                         {{-- SEVERITY --}}
                         <td>
                             <span class="badge bg-{{ $sevBadge }}">
-                                {{ ucfirst($rev->item->severity) }}
+                                {{ ucfirst($item->severity ?? 'unknown') }}
                             </span>
                         </td>
 
                         {{-- OLD → NEW --}}
                         <td>
-                            <strong>{{ $rev->old_value['status'] ?? '-' }}</strong>
+                            <strong>{{ $oldStatus }}</strong>
                             →
-                            <strong class="text-success">{{ $rev->new_value['status'] ?? '-' }}</strong>
+                            <strong class="text-success">{{ $newStatus }}</strong>
                         </td>
 
                         {{-- COMMENT --}}
                         <td>{{ $rev->comment }}</td>
 
                         {{-- USER --}}
-                        <td>{{ $rev->user->name }}</td>
+                        <td>{{ $user->name ?? '—' }}</td>
 
                         {{-- TIME --}}
-                        <td>{{ $rev->created_at->diffForHumans() }}</td>
+                        <td>{{ optional($rev->created_at)->diffForHumans() }}</td>
 
                         {{-- OPEN ITEM --}}
                         <td>
-                            <a href="{{ route('qa_items.index', $rev->item->sheet_id) }}#item-{{ $rev->item->id }}"
+                            <a href="{{ route('qa_items.index', $item->sheet_id) }}#item-{{ $item->id }}"
                                class="btn btn-sm btn-primary">
                                 View
                             </a>
@@ -128,7 +143,7 @@
             </table>
 
             <div class="mt-3">
-                {{ $reviews->links() }}
+                {{ $reviews->withQueryString()->links() }}
             </div>
 
         </div>
