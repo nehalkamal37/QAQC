@@ -400,10 +400,11 @@
 							</div>
 						</li>
 						--}}
+						{{--
 						<li class="nav-item dropdown">
 							<a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-bs-toggle="dropdown">
-                <i class="align-middle" data-feather="settings"></i>
-              </a>
+                           <i class="align-middle" data-feather="settings"></i>
+                          </a>
 
 							<a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
                 <img src="{{ asset('/user-ava.png') }}" class="avatar img-fluid rounded me-1" alt="Charles Hall" /> <span class="text-dark">{{ Auth()->user()->name}}</span>
@@ -417,15 +418,51 @@
 								<a class="dropdown-item" href="#"><i class="align-middle me-1" data-feather="help-circle"></i> Help Center</a>
 								<div class="dropdown-divider"></div>
 						-->
+								@auth
                                 <form method="POST" action="{{ route('logout') }}">
     @csrf
     <button type="submit" class="dropdown-item">
         Log out
     </button>
 </form>
-
+@endauth
 							</div>
 						</li>
+						--}}
+
+				@auth
+<li class="nav-item dropdown">
+    <a class="nav-link"
+       href="#"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+        <img src="{{ asset('user-ava.png') }}"
+             class="avatar img-fluid rounded me-1"
+             alt="User" />
+        <span class="text-dark">{{ auth()->user()->name }}</span>
+    </a>
+
+    <div class="dropdown-menu dropdown-menu-end">
+        @if(Route::has('profile'))
+            <a class="dropdown-item" href="{{ route('profile') }}">
+                <i class="align-middle me-1" data-feather="user"></i>
+                Profile
+            </a>
+        @endif
+
+        <div class="dropdown-divider"></div>
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="dropdown-item">
+                Log out
+            </button>
+        </form>
+    </div>
+</li>
+@endauth
+
+
 					</ul>
 				</div>
 			</nav>
@@ -740,6 +777,7 @@
 						-->
 		</div>
 	</div>
+<script src="{{ asset('dash/js/bootstrap.bundle.min.js') }}"></script>
 
 	<script src="{{asset('dash/js/app.js')}}"></script>
 

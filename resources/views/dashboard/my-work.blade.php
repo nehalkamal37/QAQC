@@ -151,9 +151,16 @@
                             @foreach($assignments as $assignment)
                                 <tr class="border-bottom">
                                     <td class="ps-4">
-                                        <div class="fw-semibold text-primary">
-                                            {{ $assignment->project->name ?? '—' }}
-                                        </div>
+                                     
+                                        @if($assignment->project)
+    <a href="{{ route('projects.show', $assignment->project->id) }}"
+       class="fw-semibold text-primary text-decoration-none">
+        {{ $assignment->project->name }}
+    </a>
+@else
+    <span class="text-muted">—</span>
+@endif
+
                                         @if($assignment->project && $assignment->project->client)
                                             <div class="text-muted small">
                                                 <i class="fas fa-building me-1"></i>

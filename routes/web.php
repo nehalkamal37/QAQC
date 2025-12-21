@@ -40,7 +40,7 @@ Route::get('/demo/qc-checklist', [DemoController::class, 'qcChecklistDemo'])
 // ======================
 // Authenticated Routes
 // ======================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth' , \App\Http\Middleware\NoCache::class])->group(function () {
 
     // Dashboard & Home
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

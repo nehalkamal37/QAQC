@@ -73,8 +73,52 @@ $data = [
     ]);
 }
 
+private function getDerivedStatusCounts()
+{
+    $statuses = [
+        'open'        => 0,
+        'in_progress' => 0,
+        'needs_info'  => 0,
+        'resolved'    => 0,
+        'verified'    => 0,
+        'closed'      => 0,
+    ];
 
- private function getDerivedStatusCounts()
+    /**
+     * نفس منطق Heatmap:
+     * - نعدّ فقط QA Items المرتبطة بـ Project
+     * - نستخدم derived_status من projectStatus فقط
+     * - QA Item بدون projectStatus يتم تجاهله
+     */
+
+    $items = QaItem::with([
+        'projectStatus' => function ($q) {
+            $q->latest('updated_at');
+        }
+    ])->get();
+
+    foreach ($items as $item) {
+
+        $ps = $item->projectStatus;
+
+        // Heatmap لا يحسب items بدون project status
+        if (!$ps) {
+            continue;
+        }
+
+        $derived = $ps->derived_status ?? 'open';
+
+        if (isset($statuses[$derived])) {
+            $statuses[$derived]++;
+        }
+    }
+
+    return $statuses;
+}
+
+
+
+ private function getDerivedStatusCountsone()
 {
     $statuses = [
         'open'        => 0,

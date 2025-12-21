@@ -8,10 +8,11 @@
             <h1 class="h3 d-inline align-middle">My Profile</h1>
         </div>
 
-        <div class="row">
+              <div class="row justify-content-center ">
 
             {{-- LEFT PROFILE CARD --}}
-            <div class="col-md-4 col-xl-3">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6">
+     
                 <div class="card mb-3">
                     <div class="card-header">
                         <h5 class="card-title mb-0">Profile Details</h5>
@@ -58,7 +59,7 @@
                 </div>
             </div>
 
-            {{-- RIGHT SIDE --}}
+            {{-- RIGHT SIDE -
             <div class="col-md-8 col-xl-9">
                 <div class="card">
                     <div class="card-header">
@@ -72,6 +73,8 @@
 
                 </div>
             </div>
+--}}
+
         </div>
 
     </div>

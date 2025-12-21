@@ -116,8 +116,8 @@
                 <strong class="small">Declare:</strong>
                 <div class="d-flex align-items-center gap-3 small mt-1">
                     <span>A --> Applicable</span> 
-                    <span>I --> Inapplicable</span>
-                    <span>C --> Compliant</span>
+                    <span>I --> Incorporated</span>
+                    <span>C --> Confirmed</span>
                 </div>
             </div>
         </div>
@@ -548,10 +548,16 @@
         <!-- Status Cards -->
         <div class="col-lg-6">
             <div class="section-card">
+            
                 <div class="section-header">
-                    <h5 class="fw-bold mb-0"> Status Overview</h5>
-                    <span class="text-muted small">Current QA item status</span>
-                </div>
+    <h5 class="fw-bold mb-0">Status Overview</h5>
+    <span class="text-muted small">
+        Aggregated QA item status across all projects.
+        <br>
+     
+
+</div>
+
                 <div class="row g-3 mt-2">
                     <div class="col-md-6">
                         <div class="status-card status-open">
@@ -1658,7 +1664,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 <div>
                                     <strong class="text-primary">Sign-off Readiness</strong>
                                     <div class="text-muted small">
-                                        ${p.ready_for_signoff ? '✅ Ready for Sign-off' : '⚠️ Not ready for Sign-off'}
+                                        ${p.ready_for_signoff ? '✅ Ready for Sign-off' : ' Not ready for Sign-off'}
                                     </div>
                                 </div>
                                 <div class="fw-bold">${readinessPercentage.toFixed(1)}%</div>
@@ -1678,7 +1684,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         ${p.blocking > 0 ? `
                         <div class="blocking-items-section">
                             <h6 class="fw-bold text-danger mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
                                 Blocking Items (${p.blocking})
                             </h6>
                             ${generateBlockingItems(p.blocking_items || [])}

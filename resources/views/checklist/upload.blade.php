@@ -16,21 +16,39 @@
 
         <div class="card-body p-4">
 
-            {{-- SUCCESS MESSAGE --}}
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <strong>Success!</strong> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+ @if(session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Uploaded Successfully 🎉',
+        text: @json(session('success')),
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3500,
+        timerProgressBar: true,
+        background: '#f0fdf4',
+        iconColor: '#22c55e'
+    });
+</script>
+@endif
 
-            {{-- ERROR MESSAGE --}}
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Error!</strong> {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+@if(session('error'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed ❌',
+        text: @json(session('error')),
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: '#fef2f2',
+        iconColor: '#ef4444'
+    });
+</script>
+@endif
 
             {{-- UPLOAD FORM --}}
             <form action="{{ route('checklist.upload.save') }}" method="POST" enctype="multipart/form-data">
@@ -95,6 +113,9 @@
 </div>
 
 {{-- نمرّر الداتا من PHP إلى JS --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
