@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use App\Models\QaItem;
 
 class TimelineController extends Controller
 {
@@ -126,10 +127,16 @@ $logs = ActivityLog::query()
         ->paginate(10)
         ->withQueryString();
 
+
+    
+
+
     return view('timeline.index', compact(
         'logs','user','action','project','severity','search','item_id',
         'assignedTo','applicable','incorporated','confirmed','dueFrom','dueTo'
     ));
+
+
 }
 
     public function index1(Request $request)

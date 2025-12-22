@@ -84,7 +84,7 @@
 
 
 
-{{-- resources/views/layouts/app.blade.php --}}
+{{-- resources/views/layouts/app.blade.php 
 <li class="sidebar-item">
     <a class="sidebar-link" href="{{ route('notifications.index') }}">
         <i class="align-middle" data-feather="bell"></i>
@@ -97,8 +97,31 @@
         @endif
     </a>
 </li>
+--}}
 
-					
+					<li class="sidebar-item">
+    <a class="sidebar-link" href="{{ route('notifications.index') }}">
+        <i class="align-middle" data-feather="bell"></i>
+        <span class="align-middle">Notifications</span>
+
+        @php
+            $unreadCount = auth()->check()
+                ? \App\Models\Notification::where('user_id', auth()->id())
+                    ->where('is_read', false)
+                    ->count()
+                : 0;
+        @endphp
+
+        <span
+            id="notification-counter"
+            class="sidebar-badge badge bg-danger rounded-pill"
+            style="{{ $unreadCount == 0 ? 'display:none' : '' }}"
+        >
+            {{ $unreadCount }}
+        </span>
+    </a>
+</li>
+
 {{-- resources/views/layouts/app.blade.php --}}
 {{-- Add this to your sidebar navigation --}}
 
@@ -1002,6 +1025,40 @@
 			});
 		});
 	</script>
+
+
+<script>
+@if(auth()->check())
+    const USER_ID = {{ auth()->id() }};
+@endif
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Echo === 'undefined' || typeof USER_ID === 'undefined') return;
+
+    Echo.private(`notifications.${USER_ID}`)
+        .listen('.notification.created', (e) => {
+
+            const counter = document.getElementById('notification-counter');
+            if (!counter) return;
+
+            let count = parseInt(counter.innerText || '0');
+            count++;
+
+            counter.innerText = count;
+            counter.style.display = 'inline-block';
+
+            // Optional: visual feedback
+            counter.classList.add('animate__animated', 'animate__pulse');
+            setTimeout(() => {
+                counter.classList.remove('animate__animated', 'animate__pulse');
+            }, 1000);
+        });
+});
+
+
+</script>
+
 
 </body>
 

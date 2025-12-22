@@ -1,56 +1,101 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Services\WeeklyReportService;
-use Barryvdh\DomPDF\Facade\Pdf;  //This package converts HTML → PDF.
+use App\Services\WeeklyReportExportService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WeeklyReportController extends Controller
 {
-
-
-    public function show(WeeklyReportService $service) //Laravel automatically injects WeeklyReportService (This is called dependency injection.)
+    /**
+     * Weekly report screen (UI)
+     * Lightweight, fast, dashboard-oriented
+     */
+    public function show(WeeklyReportService $service)
     {
-        $report = $service->generate();  //Gets the weekly report data array
+        $report = $service->generate();
 
         return view('reports.weekly', compact('report'));
     }
 
+    /**
+     * Weekly PDF export
+     * Heavy, analytical, archival
+     */
+    public function pdf(WeeklyReportExportService $exportService)
+    {
+        $report = $exportService->build();
 
-    public function pdf(WeeklyReportService $service)  //Same dependency injection as before.
-   {
-    $report = $service->generate();   //Same data, reused again.
+        $pdf = Pdf::loadView('reports.weekly-pdf', compact('report'))
+            ->setPaper('a4', 'portrait');
 
-    $pdf = Pdf::loadView('reports.weekly-pdf', compact('report'));   
-     //Loads a Blade view designed for PDF
-     //Renders it as HTML
-     //Converts it into a PDF document
+        return $pdf->download(
+            'weekly-qa-qc-report-' . now()->format('Y-m-d') . '.pdf'
+        );
+    }
 
-    return $pdf->download('weekly-report.pdf');   //Forces a file download
-   }
+    /**
+     * Weekly CSV export
+     * Structured for Excel / Power BI
+     */
+    public function csv(WeeklyReportExportService $exportService): StreamedResponse
+    {
+        $report = $exportService->build();
 
-public function csv(WeeklyReportService $service)
-  {
-    $report = $service->generate();
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="weekly-qa-qc-report-' . now()->format('Y-m-d') . '.csv"',
+        ];
 
-    $headers = [
-        'Content-Type' => 'text/csv',   //These headers tell the browser:This is a CSV file,Download it (don’t display it)
-        'Content-Disposition' => 'attachment; filename="weekly-report.csv"',
-    ];
+        $callback = function () use ($report) {
+            $file = fopen('php://output', 'w');
 
-    $callback = function () use ($report) {  //This function writes data directly to the output stream.
-        $file = fopen('php://output', 'w');  //Opens a write stream to the response output
+            /**
+             * Sectioned CSV (NOT flat status/count)
+             * This is what makes it powerful.
+             */
 
-        fputcsv($file, ['Status', 'Count']);  //Writes the CSV header row
+            // ===== META =====
+            fputcsv($file, ['SECTION', 'KEY', 'VALUE']);
+            fputcsv($file, ['meta', 'from', $report['meta']['from']]);
+            fputcsv($file, ['meta', 'to', $report['meta']['to']]);
+            fputcsv($file, ['meta', 'generated_at', $report['meta']['generated_at']]);
 
-        foreach ($report['by_status'] as $status => $count) {
-            fputcsv($file, [$status, $count]);   //Writes each status row ,Uses the report’s grouped data
-        }
+            // ===== THROUGHPUT =====
+            foreach ($report['throughput'] as $key => $value) {
+                fputcsv($file, ['throughput', $key, $value]);
+            }
 
-        fclose($file);  //Closes the output stream
-    };
+            // ===== STATUS DISTRIBUTION =====
+            foreach ($report['status_distribution'] as $status => $row) {
+                fputcsv($file, [
+                    'status',
+                    $status,
+                    $row['count'],
+                    $row['percentage'] . '%'
+                ]);
+            }
 
-    return response()->stream($callback, 200, $headers);  //Sends the CSV to the browser as a streamed response
-   }
+            // ===== AIC =====
+            foreach ($report['aic'] as $key => $value) {
+                fputcsv($file, ['aic', $key, $value]);
+            }
 
+            // ===== OVERDUE =====
+            foreach ($report['overdue'] as $key => $value) {
+                fputcsv($file, ['overdue', $key, $value]);
+            }
 
+            // ===== ACTIVITY SUMMARY =====
+            foreach ($report['activity_summary'] as $action => $count) {
+                fputcsv($file, ['activity', $action, $count]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

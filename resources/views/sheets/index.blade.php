@@ -130,7 +130,6 @@
                                     QA Items
                                 </a>
 
-                                @if($sheet->qaItems->count() == 0)
                                 
          <a href="{{ route('checklist.upload') }}" class="btn btn-sm btn-primary">
 
@@ -146,7 +145,7 @@
                                         </button>
                                     </form>
                                     --}}
-                                @endif
+                                
 
                                 @if(auth()->user()->hasRole(['Admin','PM','Senior Reviewer','Reviewer']))
                                     <a href="{{ route('sheets.edit', $sheet->id) }}"

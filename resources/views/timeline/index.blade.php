@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 fw-bold mb-1 text-dark">Activity Timeline</h1>
-            <p class="text-muted mb-0">Track all project updates, assignments and QA changes</p>
+            <p class="text-muted mb-0">Track all projects updates, assignments and QA changes</p>
         </div>
         <span class="badge bg-light text-dark">
             <i class="fas fa-history me-1"></i> {{ $logs->total() }} activities

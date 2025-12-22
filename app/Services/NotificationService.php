@@ -6,6 +6,7 @@ use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\UserNotificationMail;
+use App\Events\NotificationCreated;
 
 class NotificationService
 {
@@ -82,6 +83,9 @@ public static function send(
         'subject_id'   => $subjectId,
         'is_read'      => false,
     ]);
+
+
+broadcast(new NotificationCreated($notification))->toOthers();
 
     // Email (unchanged)
     $user = User::find($userId);

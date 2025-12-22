@@ -44,6 +44,7 @@
                         {{-- STATUS COLUMN --}}
                         <td>
                             {{-- Engineer + Night Vision -> Read Only --}}
+                            
                             @if(auth()->user()->hasRole(['Engineer', 'Night Vision']))
                                 <span class="badge bg-secondary">
                                     {{ ucwords(str_replace('_',' ', $phase->status)) }}
