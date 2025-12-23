@@ -80,6 +80,50 @@
                         </select>
                     </div>
 
+
+
+<div class="col-md-2">
+    <label class="form-label small text-muted">Phase</label>
+    <select name="phase" class="form-select form-select-sm">
+        <option value="">All</option>
+
+        @foreach(
+            \App\Models\Phase::with('project')
+                ->orderBy('type')
+                ->get() as $phase
+        )
+            <option value="{{ $phase->id }}"
+                @selected(request('phase') == $phase->id)>
+                {{ $phase->type }}
+                @if($phase->project)
+                    — {{ $phase->project->name }}
+                @endif
+            </option>
+        @endforeach
+    </select>
+</div>
+
+
+<div class="col-md-2">
+    <label class="form-label small text-muted">Severity</label>
+    <select name="severity" class="form-select form-select-sm">
+        <option value="">All</option>
+
+        @foreach(
+            \App\Models\QAItem::select('severity')
+                ->distinct()
+                ->orderBy('severity')
+                ->pluck('severity') as $severity
+        )
+            <option value="{{ $severity }}"
+                @selected(request('severity') == $severity)>
+                {{ ucfirst($severity) }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+
                     <!-- Applicable -->
                     <div class="col-md-1">
                         <label class="form-label small text-muted">Applicable</label>

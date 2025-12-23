@@ -9,7 +9,119 @@ use App\Models\QaItem;
 class TimelineController extends Controller
 {
 
-    public function index(Request $request)
+public function index(Request $request)
+{
+    $user         = $request->user;
+    $action       = $request->action;
+    $project      = $request->project;
+    $severity     = $request->severity;
+    $search       = $request->search;
+    $item_id      = $request->item_id;
+
+    $assignedTo   = $request->assigned_to;
+    $applicable   = $request->applicable;
+    $incorporated = $request->incorporated;
+    $confirmed    = $request->confirmed;
+    $dueFrom      = $request->due_from;
+    $dueTo        = $request->due_to;
+    $phase        = $request->phase;
+
+    $logs = ActivityLog::query()
+        ->leftJoin('project_qa_item_statuses as pq', function ($j) {
+            $j->on('pq.qa_item_id', '=', 'activity_logs.qa_item_id')
+              ->on('pq.project_id', '=', 'activity_logs.project_id');
+        })
+        ->select('activity_logs.*')
+        ->with(['user','project','phase','sheet','item'])
+
+        // ✅ Assigned To (JSON OR project status)
+        ->when($assignedTo, function ($q) use ($assignedTo) {
+            $q->where(function ($w) use ($assignedTo) {
+                $w->whereRaw(
+                    "JSON_UNQUOTE(JSON_EXTRACT(activity_logs.new_value, '$.assigned_to')) = ?",
+                    [$assignedTo]
+                )
+                ->orWhere('pq.assigned_to', $assignedTo);
+            });
+        })
+
+        // User
+        ->when($user, fn ($q) => $q->where('user_id', $user))
+
+        // Action
+        ->when($action, fn ($q) => $q->where('action_type', $action))
+
+        // Project
+        ->when($project, fn ($q) => $q->where('project_id', $project))
+
+        // QA Item
+        ->when($item_id, fn ($q) => $q->where('qa_item_id', $item_id))
+
+        // Severity (QA Item)
+        ->when($severity, fn ($q) =>
+            $q->whereHas('item', fn ($i) => $i->where('severity', $severity))
+        )
+
+        // ✅ PHASE FILTER (FIXED & CORRECT)
+        ->when($phase, fn ($q) =>
+            $q->whereHas('item', fn ($i) => $i->where('phase_id', $phase))
+        )
+
+        // Applicable
+        ->when(!is_null($applicable), fn ($q) =>
+            $q->whereJsonContains('new_value->applicable', (int) $applicable)
+        )
+
+        // Incorporated
+        ->when(!is_null($incorporated), fn ($q) =>
+            $q->whereJsonContains('new_value->incorporated', (int) $incorporated)
+        )
+
+        // Confirmed
+        ->when(!is_null($confirmed), fn ($q) =>
+            $q->whereJsonContains('new_value->confirmed', (int) $confirmed)
+        )
+
+        // Due date range
+        ->when($dueFrom, fn ($q) =>
+            $q->where('new_value->due_date', '>=', $dueFrom)
+        )
+        ->when($dueTo, fn ($q) =>
+            $q->where('new_value->due_date', '<=', $dueTo)
+        )
+
+        // Search
+        ->when($search, function ($q) use ($search) {
+            $q->where(function ($sub) use ($search) {
+                $sub->where('note', 'like', "%$search%")
+                    ->orWhereHas('item', fn ($i) =>
+                        $i->where('item_description', 'like', "%$search%")
+                    )
+                    ->orWhereRaw(
+                        "JSON_UNQUOTE(JSON_EXTRACT(activity_logs.new_value, '$.status')) LIKE ?",
+                        ["%$search%"]
+                    )
+                    ->orWhereRaw(
+                        "JSON_UNQUOTE(JSON_EXTRACT(activity_logs.old_value, '$.status')) LIKE ?",
+                        ["%$search%"]
+                    )
+                    ->orWhere('activity_logs.new_value', 'like', "%$search%")
+                    ->orWhere('activity_logs.old_value', 'like', "%$search%");
+            });
+        })
+
+        ->orderBy('activity_logs.created_at', 'desc')
+        ->paginate(10)
+        ->withQueryString();
+
+    return view('timeline.index', compact(
+        'logs','user','action','project','severity','search','item_id',
+        'assignedTo','applicable','incorporated','confirmed','dueFrom','dueTo'
+    ));
+}
+
+
+    public function index2(Request $request)
 {
     $user        = $request->user;
     $action      = $request->action;
@@ -128,7 +240,12 @@ $logs = ActivityLog::query()
         ->withQueryString();
 
 
-    
+        // ✅ Phase filter
+    if ($request->filled('phase')) {
+        $logs->whereHas('qaItem', function ($q) use ($request) {
+            $q->where('phase_id', $request->phase);
+        });
+    }
 
 
     return view('timeline.index', compact(

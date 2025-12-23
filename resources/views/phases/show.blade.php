@@ -1,32 +1,43 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container py-4">
-    <h1>Phase Details</h1>
-    
-    @if(isset($phase))
-        <div class="card mt-3">
-            <div class="card-body">
-                <h5>Phase Information</h5>
-                <p><strong>Type:</strong> {{ $phase->type ?? 'N/A' }}</p>
-                <p><strong>Project:</strong> {{ $phase->project->name ?? 'N/A' }}</p>
-                <p><strong>Status:</strong> {{ $phase->status ?? 'DRAFT' }}</p>
-                <p><strong>Created:</strong> {{ $phase->created_at ? $phase->created_at->format('Y-m-d') : 'N/A' }}</p>
-                
-                @if($phase->due_date)
-                    <p><strong>Due Date:</strong> {{ $phase->due_date->format('Y-m-d') }}</p>
-                @else
-                    <p><strong>Due Date:</strong> Not set</p>
-                @endif
-            </div>
-        </div>
-        
-        <div class="mt-3">
-            <a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>
-            <a href="/sheets?phase_id={{ $phase->id }}" class="btn btn-primary">View Sheets</a>
-        </div>
-    @else
-        <div class="alert alert-danger">Phase not found</div>
-    @endif
+@section('content')@php
+  $logs = \App\Models\ActivityLog::where('phase_id', $phase->id)
+    ->where('action_type', 'phase_status_changed')
+    ->latest()
+    ->take(10)
+    ->get();
+@endphp
+
+<div class="card mt-3">
+  <div class="card-header fw-bold">Phase Status History</div>
+  <div class="card-body p-0">
+    <table class="table table-sm table-striped mb-0">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>User</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($logs as $log)
+          <tr>
+            <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+            <td>{{ optional($log->user)->name ?? 'Unknown' }}</td>
+            <td><span class="badge bg-secondary">{{ $log->old_value['status'] ?? '-' }}</span></td>
+            <td><span class="badge bg-primary">{{ $log->new_value['status'] ?? '-' }}</span></td>
+            <td>{{ $log->note ?? '-' }}</td>
+          </tr>
+        @empty
+          <tr>
+            <td colspan="5" class="text-muted text-center py-3">No status changes logged yet.</td>
+          </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
 </div>
+
 @endsection

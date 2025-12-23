@@ -1838,7 +1838,11 @@ function initiateSignoff(phaseId) {
         alert(`Sign-off initiated for phase ${phaseId}. This would typically open a sign-off workflow.`);
     }
 }
+
+
+
 </script>
+
 
 
 @endsection

@@ -13,7 +13,6 @@ use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\ChecklistController;
 use App\Services\NotificationService;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\QcUploadController;
 use App\Http\Controllers\PhaseKanbanController;
 use App\Http\Controllers\ReportScheduleController;
 use App\Http\Controllers\WeeklyReportController;
@@ -68,8 +67,8 @@ Route::middleware(['auth' , \App\Http\Middleware\NoCache::class])->group(functio
     Route::get('/reviews', [QaItemController::class, 'reviewsIndex'])->name('qa_reviews.index');
 
     // Phase Status Update
-    Route::patch('/phases/{phase}/status', [PhaseStatusController::class, 'update'])
-        ->name('phases.status.update');
+        Route::patch('/phases/{phase}/status', [PhaseStatusController::class, 'updateStatus'])
+    ->name('phases.status.update');
 
     // ======================
     // Projects CRUD
@@ -214,6 +213,7 @@ Route::middleware(['auth' , \App\Http\Middleware\NoCache::class])->group(functio
     // ======================
     // QC Upload
     // ======================
+ /*
     Route::post('/qc-upload', [QcUploadController::class, 'upload']);
     Route::get('/qc-checklist', [QcUploadController::class, 'viewChecklist']);
     Route::get('/qc-test', function () {
@@ -240,7 +240,7 @@ Route::middleware(['auth' , \App\Http\Middleware\NoCache::class])->group(functio
         ]);
         return 'Test data inserted! Go to /qc-checklist';
     });
-
+*/
     // ======================
     // Notifications
     // ======================

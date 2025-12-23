@@ -11,16 +11,16 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-
+/*
 Schedule::command('report:weekly')->everyMinute();
 Schedule::command('report:monthly')->everyMinute();
+*/
 
 
-/*
 Schedule::command('report:weekly')->hourly();
 Schedule::command('report:monthly')->hourly();
 
-*/
+
 
 
 

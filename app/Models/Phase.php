@@ -221,5 +221,11 @@ public function getQaItemsWithFilters($filters = [])
 
     return $results;
 }
-    
+ 
+public function qaItems()
+{
+    return $this->hasManyThrough(QaItem::class, Sheet::class);
+}
+
+
 }

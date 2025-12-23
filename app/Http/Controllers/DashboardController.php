@@ -241,9 +241,24 @@ public function getProjectProgress($projectId = null)
             fn($sheetId) => $qaItems->get($sheetId, collect())->pluck('id')
         );
 
-        $projectStatuses = $statuses
-            ->get($project->id, collect())
-            ->whereIn('qa_item_id', $projectQaItemIds);
+      
+
+$projectStatuses = $statuses
+    ->get($project->id, collect())
+    ->whereIn('qa_item_id', $projectQaItemIds)
+    ->groupBy('qa_item_id')
+    ->map(function ($rows) {
+        // Take the latest row (or just aggregate)
+        $last = $rows->sortByDesc('id')->first();
+
+        return (object)[
+            'qa_item_id'     => $last->qa_item_id,
+            'applicable'     => (bool) $rows->max('applicable'),
+            'incorporated'   => (bool) $rows->max('incorporated'),
+            'confirmed'      => (bool) $rows->max('confirmed'),
+        ];
+    })
+    ->values(); // back to collection of objects
 
         $projectApplicable   = $projectStatuses->where('applicable', true)->count();
         $projectConfirmed    = $projectStatuses->where('confirmed', true)->count();

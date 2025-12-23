@@ -24,6 +24,7 @@
                     <input type="date" name="due_date" class="form-control" value="{{ $phase->due_date }}">
                 </div>
 
+                {{--
                 <div class="mb-3">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
@@ -34,6 +35,7 @@
                         @endforeach
                     </select>
                 </div>
+--}}
 
                 <button type="submit" class="btn btn-primary">Update</button>
                 <a href="{{ route('phases.index', $phase->project_id) }}" class="btn btn-secondary">Cancel</a>

@@ -12,11 +12,39 @@
             <a href="{{ route('phases.create', $project->id) }}" class="btn btn-primary">+ Add Phase</a>
         @endif
     </div>
+ 
 
-    {{-- Flash Message --}}
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+   {{-- Flash Messages --}}
+@if(session('success'))
+    <div class="alert alert-success alert-modern alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start gap-2">
+            <div class="alert-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="alert-title">Success</div>
+                <div class="alert-message">{{ session('success') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-modern alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start gap-2">
+            <div class="alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="alert-title">Action blocked</div>
+                <div class="alert-message">{{ session('error') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+@endif
+
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -187,5 +215,87 @@
   }
 }
 
+
+/* =============================== */
+/* Modern Alerts */
+/* =============================== */
+.alert-modern {
+    border: 0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    position: relative;
+}
+
+.alert-modern .alert-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.alert-modern .alert-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.alert-modern .alert-message {
+    font-size: 0.88rem;
+    opacity: 0.95;
+    line-height: 1.4;
+}
+
+/* ✅ Success styling */
+.alert-success.alert-modern {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.alert-success.alert-modern .alert-icon {
+    background: #d1fae5;
+    color: #059669;
+}
+
+/* ✅ Error styling */
+.alert-danger.alert-modern {
+    background: #fef2f2;
+    color: #7f1d1d;
+}
+
+.alert-danger.alert-modern .alert-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Improve close button */
+.alert-modern .btn-close {
+    opacity: 0.7;
+    transform: scale(0.9);
+}
+
+.alert-modern .btn-close:hover {
+    opacity: 1;
+}
+
     </style>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const alerts = document.querySelectorAll('.alert-modern');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            try {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            } catch (e) {}
+        }, 5000);
+    });
+});
+</script>
+
 @endsection
