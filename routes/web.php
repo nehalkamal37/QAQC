@@ -44,7 +44,8 @@ Route::middleware(['auth' , \App\Http\Middleware\NoCache::class])->group(functio
     // Dashboard & Home
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/', [ProjectController::class, 'index'])->name('home');
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home.page');
+
     Route::get('/my-work', [DashboardController::class, 'myWork'])->name('dashboard.my-work');
 
     // Profile
