@@ -4,17 +4,27 @@
 <div class="container-fluid px-4 py-4 dashboard-container">
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 fw-bold mb-1 text-dark">Dashboard Overview</h1>
-            <p class="text-muted mb-0">Welcome back! Here's your project summary.</p>
-        </div>
-        <div class="date-display">
-            <span class="text-muted">{{ now()->format('l, F j, Y') }}</span>
-        </div>
+
+
+   <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1 text-dark">Dashboard Overview</h1>
+        <p class="text-muted mb-0">Welcome back! Here's your project summary.</p>
     </div>
 
-   
+    <div class="d-flex align-items-center gap-3">
+        <span class="text-muted">{{ now()->format('l, F j, Y') }}</span>
+
+        <!-- ⭐ New: Focus Page -->
+        <a href="{{ route('my.qa') }}" 
+           class="btn btn-sm btn-warning shadow-sm d-flex align-items-center"
+           style="border-radius:12px;">
+            <i class="fas fa-star me-1"></i>
+            Focus
+        </a>
+    </div>
+</div>
+
 <div class="section-card mb-4">
 
     <!-- HEADER + FILTER -->
@@ -25,7 +35,7 @@
         </div>
 
         <select id="projectProgressFilter" class="form-select form-select-sm" style="width:200px;">
-            <option value="">All Projects</option>
+            <option value="">Latest Project</option>
             @foreach($projects ?? [] as $proj)
 
                 <option value="{{ $proj->id }}">{{ $proj->name }}</option>

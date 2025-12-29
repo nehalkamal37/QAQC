@@ -900,6 +900,143 @@ public function getQaItems(Request $req)
     ]);
 }
 
+public function focus()
+{
+    $user = Auth::user();
+
+    $role = Assignment::where('user_id', $user->id)
+        ->where('is_active', 1)
+        ->pluck('role')
+        ->unique()
+        ->first() ?? 'engineer';
+
+    $assignedProjectIds = Assignment::where('user_id', $user->id)
+        ->where('is_active', 1)
+        ->pluck('project_id')
+        ->unique();
+
+    $projects = Project::whereIn('id', $assignedProjectIds)->get();
+
+    // ✅ My Projects Progress (scoped)
+    $myProjectsProgress = collect();
+    foreach ($assignedProjectIds as $pid) {
+        $progressTree = $this->getProjectProgress($pid);
+        $project = $progressTree->first();
+        if ($project) $myProjectsProgress->push($project);
+    }
+
+    // ✅ My QA Items
+    $myItems = QaItem::with(['sheet.phase.project', 'projectStatus'])
+        ->where(function ($q) use ($user) {
+            $q->where('assigned_to', $user->name)
+              ->orWhere('assigned_to', $user->email)
+              ->orWhere('assigned_to', (string)$user->id);
+        })
+        ->latest()
+        ->take(20)
+        ->get();
+
+$myAssignedStatuses = ProjectQAItemStatus::with([
+        'qaItem.sheet.phase.project'
+    ])
+    ->where(function ($q) use ($user) {
+        $q->where('assigned_to', $user->name)
+          ->orWhere('assigned_to', $user->email)
+          ->orWhere('assigned_to', (string)$user->id);
+    })
+    ->latest('updated_at')
+    ->paginate(5);
+    
+
+    $stats = [
+        'assigned_projects' => $projects->count(),
+        'my_items'          => $myItems->count(),
+        'my_overdue'        => $myItems->filter(function ($i) {
+            $due = optional($i->projectStatus)->due_date ?? $i->due_date;
+            $derived = optional($i->projectStatus)->derived_status ?? $i->status;
+
+            return $due
+                && \Carbon\Carbon::parse($due)->isPast()
+                && $derived !== 'closed';
+        })->count(),
+    ];
+
+    return view('dashboard.focus', compact(
+        'role',
+        'projects',
+        'myItems',
+        'stats',
+        'myProjectsProgress','myAssignedStatuses'
+    ));
+}
+
+
+    public function myqa(Request $request)
+    {
+        $user = Auth::user();
+
+        // ✅ query
+        $q = ProjectQAItemStatus::with(['qaItem.sheet.phase.project'])
+            ->where(function ($x) use ($user) {
+                $x->where('assigned_to', $user->name)
+                  ->orWhere('assigned_to', $user->email)
+                  ->orWhere('assigned_to', (string) $user->id);
+            });
+
+        // ✅ filter by status (open/closed/etc) - IMPORTANT: use "status" not "derived_status"
+       if ($request->filled('status')) {
+    $q->whereHas('qaItem', function ($qq) use ($request) {
+        $qq->where('status', $request->status);
+    });
+}
+
+
+        // ✅ search by id or description
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $q->whereHas('qaItem', function ($qq) use ($search) {
+                $qq->where('id', $search)
+                   ->orWhere('item_description', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // ✅ due filters
+        if ($request->filled('due')) {
+            if ($request->due == 'overdue') {
+                $q->whereNotNull('due_date')
+                  ->where('due_date', '<', now()->toDateString());
+            }
+
+            if ($request->due == 'today') {
+                $q->whereDate('due_date', now()->toDateString());
+            }
+
+            if ($request->due == 'week') {
+                $q->whereBetween('due_date', [
+                    now()->toDateString(),
+                    now()->addDays(7)->toDateString()
+                ]);
+            }
+        }
+
+        $items = $q->latest('updated_at')
+                   ->paginate(5)
+                   ->appends($request->query());
+
+        // ✅ stats
+        $stats = [
+            'total'   => $items->total(),
+            'overdue' => ProjectQAItemStatus::where(function ($x) use ($user) {
+                $x->where('assigned_to', $user->name)
+                  ->orWhere('assigned_to', $user->email)
+                  ->orWhere('assigned_to', (string) $user->id);
+            })->whereNotNull('due_date')
+              ->where('due_date', '<', now()->toDateString())
+              ->count(),
+        ];
+
+        return view('dashboard.my-qa', compact('items', 'stats'));
+    }
 
 
 }
